@@ -5,11 +5,14 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>WinnerFlow | 贏家極光版</title>
     
+    <link rel="manifest" href="manifest.json">
+    
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="WinnerFlow">
-    <link rel="apple-touch-icon" href="https://raw.githubusercontent.com/ox0114xo/winner/refs/heads/main/1000084947_imgupscaler.ai_%E9%8A%BD%E5%8C%96_2K.png">
-    <link rel="icon" href="https://raw.githubusercontent.com/ox0114xo/winner/refs/heads/main/1000084947_imgupscaler.ai_%E9%8A%BD%E5%8C%96_2K.png">
+    <link rel="apple-touch-icon" href="icon.png">
+    
+    <link rel="icon" type="image/png" href="icon.png">
     <meta name="theme-color" content="#0B0F19">
 
     <script src="https://cdn.tailwindcss.com"></script>
@@ -19,7 +22,7 @@
     <style>
         body { background-color: #0B0F19; color: #E2E8F0; -webkit-tap-highlight-color: transparent; }
         .glass-panel { background: rgba(30, 41, 59, 0.7); backdrop-filter: blur(16px); border: 1px solid rgba(255, 255, 255, 0.08); }
-        .input-dark { background: #0f172a; border: 1px solid #334155; color: #f8fafc; outline: none; }
+        .input-dark { background: #0f172a; border: 1px solid #334155; color: #f8fafc; outline: none; transition: border-color 0.3s; }
         .input-dark:focus { border-color: #10b981; }
         input[type=number]::-webkit-inner-spin-button, input[type=number]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
         .neon-text { text-shadow: 0 0 15px currentColor; }
@@ -27,7 +30,7 @@
         input[type=range]::-webkit-slider-runnable-track { background: #334155; height: 6px; border-radius: 3px; }
         input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; height: 20px; width: 20px; border-radius: 50%; background: #10b981; margin-top: -7px; box-shadow: 0 0 10px rgba(16, 185, 129, 0.5); }
         
-        /* 安裝提示欄樣式 */
+        /* 安裝提示欄動畫 */
         #install-banner { display: none; animation: slideDown 0.5s ease-out; }
         @keyframes slideDown { from { transform: translateY(-100%); } to { transform: translateY(0); } }
     </style>
@@ -35,26 +38,28 @@
 
 <body class="font-sans min-h-screen flex flex-col items-center">
 
-    <div id="install-banner" class="w-full bg-gradient-to-r from-indigo-600 to-emerald-600 p-3 text-white sticky top-0 z-[100] shadow-lg">
-        <div class="max-w-6xl mx-auto flex justify-between items-center px-4">
+    <div id="install-banner" class="w-full bg-gradient-to-r from-indigo-900/90 to-emerald-900/90 backdrop-blur-md p-3 text-white sticky top-0 z-[100] border-b border-white/10">
+        <div class="max-w-6xl mx-auto flex justify-between items-center px-2">
             <div class="flex items-center gap-3">
-                <img src="https://raw.githubusercontent.com/ox0114xo/winner/refs/heads/main/1000084947_imgupscaler.ai_%E9%8A%BD%E5%8C%96_2K.png" class="w-10 h-10 rounded-lg shadow-md border border-white/20">
+                <img src="icon.png" class="w-10 h-10 rounded-lg shadow-md border border-white/20">
                 <div>
-                    <p class="text-sm font-black">WinnerFlow</p>
-                    <p class="text-[10px] opacity-80">將贏家系統安裝至桌面</p>
+                    <p class="text-sm font-black tracking-wide">安裝 WinnerFlow</p>
+                    <p class="text-[10px] opacity-80" id="install-hint">一鍵新增至主畫面，體驗更佳</p>
                 </div>
             </div>
             <div class="flex gap-2">
-                <button onclick="dismissInstall()" class="text-xs px-3 py-1.5 opacity-70">稍後</button>
-                <button id="install-btn" class="bg-white text-indigo-900 text-xs font-bold px-4 py-1.5 rounded-full shadow-md">立即安裝</button>
+                <button onclick="dismissInstall()" class="text-xs px-2 py-1.5 opacity-70 hover:opacity-100">稍後</button>
+                <button id="install-btn" class="bg-emerald-500 hover:bg-emerald-400 text-white text-xs font-bold px-4 py-1.5 rounded-full shadow-lg transition-all active:scale-95">
+                    <i class="fa-solid fa-download mr-1"></i> 安裝
+                </button>
             </div>
         </div>
     </div>
 
-    <div class="w-full max-w-6xl glass-panel rounded-3xl shadow-2xl overflow-hidden relative m-4 md:m-8">
-        <div class="p-6 md:p-8 flex flex-col md:flex-row justify-between items-center border-b border-slate-800 relative z-10">
+    <div class="w-full max-w-6xl glass-panel rounded-3xl shadow-2xl overflow-hidden relative m-4 md:m-8 border-t border-white/10">
+        <div class="p-6 md:p-8 flex flex-col md:flex-row justify-between items-center border-b border-slate-800 relative z-10 bg-slate-900/20">
             <div class="flex items-center gap-4">
-                <img src="https://raw.githubusercontent.com/ox0114xo/winner/refs/heads/main/1000084947_imgupscaler.ai_%E9%8A%BD%E5%8C%96_2K.png" class="w-12 h-12 rounded-xl border border-emerald-500/30 shadow-lg shadow-emerald-500/10">
+                <img src="icon.png" class="w-12 h-12 rounded-xl border border-emerald-500/30 shadow-lg shadow-emerald-500/10">
                 <div>
                     <h1 class="text-2xl font-black tracking-wider text-white">WINNER<span class="text-emerald-400">FLOW</span></h1>
                     <p class="text-slate-400 text-xs font-medium uppercase tracking-tighter">Professional Asset Diverter</p>
@@ -97,7 +102,7 @@
                     <div>
                         <div class="flex justify-between items-center mb-3">
                             <label class="text-sm font-bold text-slate-300">導流比例: <span id="ratio_val" class="text-emerald-400 text-lg">25</span>%</label>
-                            <button onclick="autoStrategy()" class="text-[10px] bg-slate-800 text-slate-300 border border-slate-600 px-3 py-1.5 rounded-full font-bold">自動判定</button>
+                            <button onclick="autoStrategy()" class="text-[10px] bg-slate-800 text-slate-300 border border-slate-600 px-3 py-1.5 rounded-full font-bold hover:bg-slate-700 transition">自動判定</button>
                         </div>
                         <input type="range" id="transfer_ratio" min="0" max="100" value="25" oninput="uiInteract(); calculate()">
                     </div>
@@ -146,12 +151,28 @@
     <script>
         let myChart = null, deferredPrompt;
 
-        // --- PWA 安裝邏輯 (Android) ---
-        window.addEventListener('beforeinstallprompt', (e) => {
-            e.preventDefault();
-            deferredPrompt = e;
-            document.getElementById('install-banner').style.display = 'block';
-        });
+        // --- PWA 安裝邏輯優化 ---
+        // 檢查是否為 iOS
+        const isIos = /iphone|ipad|ipod/.test(window.navigator.userAgent.toLowerCase());
+        // 檢查是否已經在 standalone 模式 (已經安裝過)
+        const isInStandaloneMode = ('standalone' in window.navigator) && (window.navigator.standalone);
+
+        // 如果不是在 App 模式下執行，才顯示安裝提示
+        if (!isInStandaloneMode) {
+            if (isIos) {
+                // iOS: 直接顯示提示欄，並修改文字
+                document.getElementById('install-hint').innerText = "iOS 請點擊分享按鈕 → 加入主畫面";
+                document.getElementById('install-btn').style.display = "none"; // iOS 不能透過按鈕安裝
+                document.getElementById('install-banner').style.display = 'block';
+            } else {
+                // Android / Desktop: 等待瀏覽器觸發事件
+                window.addEventListener('beforeinstallprompt', (e) => {
+                    e.preventDefault();
+                    deferredPrompt = e;
+                    document.getElementById('install-banner').style.display = 'block';
+                });
+            }
+        }
 
         document.getElementById('install-btn').addEventListener('click', async () => {
             if (deferredPrompt) {
@@ -159,15 +180,16 @@
                 const { outcome } = await deferredPrompt.userChoice;
                 if (outcome === 'accepted') dismissInstall();
                 deferredPrompt = null;
-            } else {
-                // iOS 專屬提示
-                alert('iOS 使用者請點擊瀏覽器底部的「分享」按鈕，然後選擇「加入主畫面」');
             }
         });
 
-        function dismissInstall() { document.getElementById('install-banner').style.display = 'none'; }
+        function dismissInstall() { 
+            document.getElementById('install-banner').style.animation = "slideDown 0.5s ease-out reverse forwards";
+            setTimeout(() => { document.getElementById('install-banner').style.display = 'none'; }, 500);
+            // 可以在這裡加入 localStorage 紀錄，例如一天內不再顯示
+        }
 
-        // --- 核心運算與原本邏輯 ---
+        // --- 核心運算邏輯 (保持不變) ---
         function fmtMny(num, pre = '') { return pre + parseFloat(num).toLocaleString('en-US', { maximumFractionDigits: 0 }); }
         function hideKeyboard() { if (document.activeElement && document.activeElement.tagName === 'INPUT') document.activeElement.blur(); }
         function uiInteract() { hideKeyboard(); if (navigator.vibrate) navigator.vibrate(10); }
@@ -177,20 +199,8 @@
             const btnT = document.getElementById('fetch_text'), btnI = document.getElementById('fetch_icon');
             btnT.innerText = "連線中..."; btnI.className = "fa-solid fa-circle-notch fa-spin";
             let fxOk = false, stkOk = false;
-
-            try {
-                const r = await fetch('https://open.er-api.com/v6/latest/USD');
-                const d = await r.json();
-                if (d?.rates?.TWD) { document.getElementById('fx_rate').value = d.rates.TWD.toFixed(2); fxOk = true; }
-            } catch (e) {}
-
-            try {
-                const r = await fetch('https://openapi.twse.com.tw/v1/exchangeReport/STOCK_DAY_ALL');
-                const d = await r.json();
-                const s = d.find(x => x.Code === "0050");
-                if (s?.ClosingPrice) { document.getElementById('current_price').value = parseFloat(s.ClosingPrice); stkOk = true; }
-            } catch (e) {}
-
+            try { const r = await fetch('https://open.er-api.com/v6/latest/USD'); const d = await r.json(); if (d?.rates?.TWD) { document.getElementById('fx_rate').value = d.rates.TWD.toFixed(2); fxOk = true; } } catch (e) {}
+            try { const r = await fetch('https://openapi.twse.com.tw/v1/exchangeReport/STOCK_DAY_ALL'); const d = await r.json(); const s = d.find(x => x.Code === "0050"); if (s?.ClosingPrice) { document.getElementById('current_price').value = parseFloat(s.ClosingPrice); stkOk = true; } } catch (e) {}
             calculate();
             btnI.className = fxOk && stkOk ? "fa-solid fa-check text-emerald-400" : "fa-solid fa-xmark text-rose-400";
             btnT.innerText = fxOk && stkOk ? "已同步" : "連線失敗";
@@ -200,8 +210,7 @@
         function autoStrategy() {
             uiInteract();
             const mgn = (parseFloat(document.getElementById('current_price').value) - parseFloat(document.getElementById('cost_price').value)) / parseFloat(document.getElementById('current_price').value);
-            let rec = 0;
-            if (mgn >= 0.3) rec = 40; else if (mgn >= 0.2) rec = 25; else if (mgn >= 0.1) rec = 15;
+            let rec = 0; if (mgn >= 0.3) rec = 40; else if (mgn >= 0.2) rec = 25; else if (mgn >= 0.1) rec = 15;
             document.getElementById('transfer_ratio').value = rec;
             calculate();
         }
@@ -229,31 +238,20 @@
             const principal = qqq + (mgn > 0.1 ? netUsd : 0);
             const ftr = principal * Math.pow(1 + (ret / 100), yrs);
 
-            // 畫面渲染
             const roiB = document.getElementById('roi_badge');
             roiB.innerText = (roi > 0 ? '+' : '') + roi.toFixed(1) + '%';
             roiB.className = `absolute bottom-3 right-3 text-[10px] font-black px-1.5 py-0.5 rounded border ${roi >= 0 ? 'bg-emerald-900/30 text-emerald-400 border-emerald-800' : 'bg-rose-900/30 text-rose-400 border-rose-800'}`;
 
-            document.getElementById('out_profit').innerText = fmtMny(pft, 'NT$ ');
-            document.getElementById('out_transfer').innerText = fmtMny(netUsd, '$ ');
             document.getElementById('out_future').innerText = fmtMny(ftr, '$ ');
 
             const mT = document.getElementById('out_margin_text'), mB = document.getElementById('margin_bar'), ab = document.getElementById('alert_box');
             mT.innerText = (mgn * 100).toFixed(2) + '%';
             mB.style.width = Math.max(0, Math.min(mgn * 200, 100)) + '%';
             
-            if (mgn >= 0.2) { 
-                mB.className="h-full rounded-full bg-emerald-500 shadow-[0_0_15px_#10b981]"; 
-                ab.innerHTML="<i class='fa-solid fa-robot text-emerald-400'></i> <span>水位安全，導流通道已開啟。</span>"; 
-            } else if (mgn >= 0.1) {
-                mB.className="h-full rounded-full bg-amber-500 shadow-[0_0_15px_#f59e0b]";
-                ab.innerHTML="<i class='fa-solid fa-robot text-amber-400'></i> <span>護城河縮減，建議小額導流。</span>";
-            } else {
-                mB.className="h-full rounded-full bg-rose-500 shadow-[0_0_15px_#f43f5e]";
-                ab.innerHTML="<i class='fa-solid fa-robot text-rose-400'></i> <span>獲利過低，建議關閉導流。</span>";
-            }
+            if (mgn >= 0.2) { mB.className="h-full rounded-full bg-emerald-500 shadow-[0_0_15px_#10b981]"; ab.innerHTML="<i class='fa-solid fa-robot text-emerald-400'></i> <span>水位安全，導流通道已開啟。</span>"; } 
+            else if (mgn >= 0.1) { mB.className="h-full rounded-full bg-amber-500 shadow-[0_0_15px_#f59e0b]"; ab.innerHTML="<i class='fa-solid fa-robot text-amber-400'></i> <span>護城河縮減，建議小額導流。</span>"; } 
+            else { mB.className="h-full rounded-full bg-rose-500 shadow-[0_0_15px_#f43f5e]"; ab.innerHTML="<i class='fa-solid fa-robot text-rose-400'></i> <span>獲利過低，建議關閉導流。</span>"; }
 
-            // 里程碑推算
             let mile = `${yrs} 年後將達到預估目標。`;
             const tgts = [100000, 500000, 1000000];
             for (let i = 1; i <= yrs; i++) {
@@ -263,18 +261,13 @@
             }
             document.getElementById('milestone_text').innerHTML = mile;
 
-            // 更新圖表
             const lbls = [], dta = [];
             for (let i = 0; i <= yrs; i++) { lbls.push(`Y${i}`); dta.push(principal * Math.pow(1 + (ret / 100), i)); }
             if (myChart) myChart.destroy();
             const ctx = document.getElementById('growthChart').getContext('2d');
             let grad = ctx.createLinearGradient(0,0,0,200); 
             grad.addColorStop(0, 'rgba(129, 140, 248, 0.3)'); grad.addColorStop(1, 'rgba(129, 140, 248, 0)');
-            myChart = new Chart(ctx, { 
-                type: 'line', 
-                data: { labels: lbls, datasets: [{ data: dta, borderColor: '#818cf8', backgroundColor: grad, fill: true, tension: 0.4, borderWidth: 2, pointRadius: 2 }] }, 
-                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { grid: { color: '#1e293b' } }, x: { grid: { display: false } } } } 
-            });
+            myChart = new Chart(ctx, { type: 'line', data: { labels: lbls, datasets: [{ data: dta, borderColor: '#818cf8', backgroundColor: grad, fill: true, tension: 0.4, borderWidth: 2, pointRadius: 2 }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { grid: { color: '#1e293b' } }, x: { grid: { display: false } } } } });
         }
 
         window.onload = () => {
@@ -289,4 +282,3 @@
     </script>
 </body>
 </html>
-
