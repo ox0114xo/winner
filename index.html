@@ -3,115 +3,161 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>WinnerFlow 贏家決策系統</title>
+    <title>WinnerFlow 贏家決策系統 Pro</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
-        input[type=range] { accent-color: #4f46e5; cursor: pointer; }
+        /* 現代化滑桿與毛玻璃特效 */
+        input[type=range] { accent-color: #4f46e5; cursor: pointer; height: 6px; }
+        .glass-card { background: rgba(255, 255, 255, 0.85); backdrop-filter: blur(12px); border: 1px solid rgba(255,255,255,0.5); }
+        .value-transition { transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
+        .pulse-update { animation: pulseGreen 0.5s ease-out; }
+        @keyframes pulseGreen { 0% { color: #10b981; transform: scale(1.05); } 100% { transform: scale(1); } }
+        /* 隱藏數字輸入框的上下箭頭 */
+        input[type=number]::-webkit-inner-spin-button, input[type=number]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
     </style>
 </head>
-<body class="bg-slate-100 text-gray-800 font-sans p-4 md:p-8 min-h-screen flex justify-center">
+<body class="bg-gradient-to-br from-slate-100 to-slate-200 text-gray-800 font-sans p-4 md:p-8 min-h-screen flex justify-center items-start md:items-center">
 
-    <div class="w-full max-w-5xl bg-white rounded-2xl shadow-xl overflow-hidden border border-gray-100 h-fit">
-        <div class="bg-indigo-900 text-white p-6 flex flex-col md:flex-row justify-between items-center">
-            <div>
-                <h1 class="text-2xl font-bold tracking-wide"><i class="fa-solid fa-shield-halved mr-2"></i>WinnerFlow</h1>
-                <p class="text-indigo-200 text-sm mt-1">從台股利潤，灌溉美股成長</p>
+    <div class="w-full max-w-6xl glass-card rounded-3xl shadow-2xl overflow-hidden h-fit">
+        <div class="bg-gradient-to-r from-indigo-900 via-blue-900 to-indigo-900 text-white p-6 md:p-8 flex flex-col md:flex-row justify-between items-center relative overflow-hidden">
+            <div class="absolute top-0 right-0 -mt-10 -mr-10 w-40 h-40 bg-blue-500 rounded-full mix-blend-multiply filter blur-3xl opacity-50"></div>
+            <div class="z-10 text-center md:text-left">
+                <h1 class="text-3xl font-extrabold tracking-tight flex items-center justify-center md:justify-start gap-3">
+                    <i class="fa-solid fa-shield-halved text-blue-400"></i> WinnerFlow <span class="bg-gradient-to-r from-amber-300 to-orange-400 text-transparent bg-clip-text text-xl">PRO</span>
+                </h1>
+                <p class="text-indigo-200 text-sm mt-1.5 font-medium"><i class="fa-solid fa-arrow-right-arrow-left mr-1"></i> 精準計算 ‧ 無痛導流 ‧ 複利爆發</p>
             </div>
-            <button onclick="fetchMarketData()" class="mt-4 md:mt-0 bg-white/10 hover:bg-white/20 border border-white/30 text-white py-2 px-4 rounded-lg font-bold transition-all flex items-center gap-2">
-                <i id="fetch_icon" class="fa-solid fa-rotate"></i>
-                <span id="fetch_text">一鍵更新市價與匯率</span>
+            <button onclick="fetchMarketData()" class="z-10 mt-5 md:mt-0 bg-white/10 hover:bg-white/20 border border-white/20 backdrop-blur-md text-white py-2.5 px-5 rounded-xl font-bold transition-all shadow-lg flex items-center gap-2 group active:scale-95">
+                <i id="fetch_icon" class="fa-solid fa-cloud-arrow-down group-hover:animate-bounce"></i>
+                <span id="fetch_text">同步最新市價與匯率</span>
             </button>
         </div>
 
-        <div class="p-6 md:p-8 md:flex gap-8">
-            <div class="md:w-1/2 space-y-6">
-                <div class="grid grid-cols-2 gap-4">
-                    <div>
-                        <label class="text-xs font-bold text-gray-500 uppercase">0050 買進均價</label>
-                        <input type="number" id="cost_price" class="w-full bg-slate-50 border rounded-lg p-2 mt-1 focus:ring-2 focus:ring-indigo-300 font-bold" oninput="calculate()">
-                    </div>
-                    <div>
-                        <label class="text-xs font-bold text-gray-500 uppercase">0050 目前市價</label>
-                        <input type="number" id="current_price" class="w-full bg-slate-50 border rounded-lg p-2 mt-1 focus:ring-2 focus:ring-indigo-300 font-bold text-blue-600" oninput="calculate()">
-                    </div>
-                    <div>
-                        <label class="text-xs font-bold text-gray-500 uppercase">持有股數</label>
-                        <input type="number" id="shares" class="w-full bg-slate-50 border rounded-lg p-2 mt-1 focus:ring-2 focus:ring-indigo-300 font-bold" oninput="calculate()">
-                    </div>
-                    <div>
-                        <label class="text-xs font-bold text-gray-500 uppercase">匯率 (USD/TWD)</label>
-                        <input type="number" id="fx_rate" step="0.1" class="w-full bg-slate-50 border rounded-lg p-2 mt-1 focus:ring-2 focus:ring-indigo-300 font-bold text-green-600" oninput="calculate()">
-                    </div>
-                </div>
-
+        <div class="p-5 md:p-8 md:flex gap-8 lg:gap-12">
+            <div class="md:w-[45%] space-y-7">
+                
                 <div>
-                    <label class="text-xs font-bold text-gray-500 uppercase">QQQ 現有資產 (USD)</label>
-                    <input type="number" id="qqq_now" class="w-full bg-indigo-50 border border-indigo-100 rounded-lg p-3 mt-1 font-bold text-lg text-indigo-900 focus:ring-2 focus:ring-indigo-300" oninput="calculate()">
+                    <div class="flex justify-between items-end border-b-2 border-slate-200 pb-2 mb-4">
+                        <h2 class="text-lg font-bold text-slate-700 flex items-center gap-2"><i class="fa-solid fa-wallet text-indigo-500"></i> 核心資產水位</h2>
+                    </div>
+                    <div class="grid grid-cols-2 gap-4">
+                        <div class="bg-slate-50 p-3 rounded-xl border border-slate-200 focus-within:ring-2 focus-within:ring-indigo-400 transition-all">
+                            <label class="text-xs font-bold text-slate-500 uppercase block mb-1">0050 買進均價 (NT$)</label>
+                            <input type="number" id="cost_price" class="w-full bg-transparent font-black text-xl text-slate-800 outline-none" oninput="calculate()">
+                        </div>
+                        <div class="bg-slate-50 p-3 rounded-xl border border-slate-200 focus-within:ring-2 focus-within:ring-indigo-400 transition-all relative">
+                            <label class="text-xs font-bold text-slate-500 uppercase block mb-1">0050 目前市價 (NT$)</label>
+                            <input type="number" id="current_price" class="w-full bg-transparent font-black text-xl text-blue-600 outline-none" oninput="calculate()">
+                            <span id="roi_badge" class="absolute top-2 right-2 text-[10px] font-bold px-1.5 py-0.5 rounded bg-gray-200 text-gray-600">--%</span>
+                        </div>
+                        <div class="bg-slate-50 p-3 rounded-xl border border-slate-200 focus-within:ring-2 focus-within:ring-indigo-400 transition-all">
+                            <label class="text-xs font-bold text-slate-500 uppercase block mb-1">持有股數</label>
+                            <input type="number" id="shares" class="w-full bg-transparent font-black text-xl text-slate-800 outline-none" oninput="calculate()">
+                        </div>
+                        <div class="bg-emerald-50 p-3 rounded-xl border border-emerald-100 focus-within:ring-2 focus-within:ring-emerald-400 transition-all">
+                            <label class="text-xs font-bold text-emerald-600 uppercase block mb-1">匯率 (USD/TWD)</label>
+                            <input type="number" id="fx_rate" step="0.1" class="w-full bg-transparent font-black text-xl text-emerald-700 outline-none" oninput="calculate()">
+                        </div>
+                    </div>
+                    
+                    <div class="mt-4 bg-indigo-50 p-4 rounded-xl border border-indigo-100 focus-within:ring-2 focus-within:ring-indigo-400 transition-all flex items-center justify-between">
+                        <div>
+                            <label class="text-xs font-bold text-indigo-500 uppercase block mb-1"><i class="fa-solid fa-earth-americas"></i> QQQ 現有資產 (USD)</label>
+                            <input type="number" id="qqq_now" class="w-full bg-transparent font-black text-2xl text-indigo-900 outline-none" oninput="calculate()">
+                        </div>
+                    </div>
                 </div>
 
-                <div class="bg-slate-50 p-4 rounded-xl border space-y-4">
+                <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm space-y-6">
                     <div>
-                        <div class="flex justify-between items-center mb-1">
-                            <label class="text-sm font-bold text-gray-700">獲利導流比例</label>
-                            <span class="bg-blue-100 text-blue-800 font-bold px-2 py-0.5 rounded text-sm"><span id="ratio_val">25</span>%</span>
+                        <div class="flex justify-between items-center mb-2">
+                            <label class="text-sm font-bold text-slate-700"><i class="fa-solid fa-faucet-drip text-blue-500"></i> 導流比例: <span id="ratio_val" class="text-blue-600 text-lg">25</span>%</label>
+                            <button onclick="autoStrategy()" class="text-xs bg-amber-50 text-amber-600 border border-amber-200 px-2 py-1 rounded-md hover:bg-amber-100 transition shadow-sm font-bold"><i class="fa-solid fa-wand-magic-sparkles"></i> 智能判定</button>
                         </div>
                         <input type="range" id="transfer_ratio" min="0" max="100" value="25" class="w-full" oninput="calculate()">
                     </div>
-                    <div class="grid grid-cols-2 gap-4">
-                        <div>
-                            <div class="flex justify-between items-center mb-1">
-                                <label class="text-xs font-bold text-gray-500 uppercase">預期年化</label>
-                                <span class="text-sm font-bold text-gray-700"><span id="return_val">11</span>%</span>
+                    
+                    <div class="pt-3 border-t border-slate-100">
+                        <div class="flex justify-between items-center mb-2">
+                            <label class="text-sm font-bold text-slate-700"><i class="fa-solid fa-chart-line text-purple-500"></i> 預期年化: <span id="return_val" class="text-purple-600 text-lg">11</span>%</label>
+                            <div class="flex gap-1">
+                                <button onclick="setReturn(7)" class="text-[10px] bg-slate-100 hover:bg-slate-200 text-slate-600 px-2 py-1 rounded font-bold transition">保守 7%</button>
+                                <button onclick="setReturn(11)" class="text-[10px] bg-indigo-100 hover:bg-indigo-200 text-indigo-600 px-2 py-1 rounded font-bold transition">穩健 11%</button>
+                                <button onclick="setReturn(15)" class="text-[10px] bg-rose-100 hover:bg-rose-200 text-rose-600 px-2 py-1 rounded font-bold transition">積極 15%</button>
                             </div>
-                            <input type="range" id="expected_return" min="1" max="25" value="11" class="w-full" oninput="calculate()">
                         </div>
-                        <div>
-                            <div class="flex justify-between items-center mb-1">
-                                <label class="text-xs font-bold text-gray-500 uppercase">預估年限</label>
-                                <span class="text-sm font-bold text-gray-700"><span id="years_val">5</span> 年</span>
-                            </div>
-                            <input type="range" id="years" min="1" max="30" value="5" class="w-full" oninput="calculate()">
+                        <input type="range" id="expected_return" min="1" max="25" value="11" class="w-full" oninput="calculate()">
+                    </div>
+
+                    <div class="pt-3 border-t border-slate-100">
+                        <div class="flex justify-between items-center mb-2">
+                            <label class="text-sm font-bold text-slate-700"><i class="fa-solid fa-hourglass-half text-teal-500"></i> 預估年限: <span id="years_val" class="text-teal-600 text-lg">5</span> 年</label>
                         </div>
+                        <input type="range" id="years" min="1" max="30" value="5" class="w-full" oninput="calculate()">
                     </div>
                 </div>
             </div>
 
-            <div class="md:w-1/2 flex flex-col space-y-4">
-                <div class="bg-white p-4 rounded-xl border border-gray-200">
-                    <div class="flex justify-between items-end mb-2">
-                        <span class="text-sm font-bold text-gray-500">價格安全水位 (護城河)</span>
-                        <span id="out_margin_text" class="text-xl font-black">--</span>
-                    </div>
-                    <div class="w-full bg-gray-100 rounded-full h-3">
-                        <div id="margin_bar" class="h-3 rounded-full transition-all duration-500" style="width: 0%;"></div>
-                    </div>
-                </div>
-
-                <div class="bg-slate-50 rounded-xl border border-gray-200">
-                    <div class="p-4 flex justify-between items-center border-b">
-                        <span class="text-sm font-bold text-gray-600">帳面純利潤</span>
-                        <span id="out_profit" class="text-lg font-bold">--</span>
-                    </div>
-                    <div class="p-3 bg-red-50 flex justify-between items-center text-sm border-b">
-                        <span class="text-red-500 font-semibold">扣除交易稅/手續費/電匯</span>
-                        <span id="out_friction" class="font-bold text-red-600">--</span>
-                    </div>
-                    <div class="p-4 bg-green-50 flex justify-between items-center rounded-b-xl">
-                        <span class="text-sm font-bold text-green-700">可導流淨額 (USD)</span>
-                        <span id="out_transfer" class="text-2xl font-black text-green-600">--</span>
+            <div class="md:w-[55%] flex flex-col space-y-5">
+                
+                <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm relative overflow-hidden">
+                    <div id="alert_bg" class="absolute inset-0 opacity-10 transition-colors duration-500 bg-green-500"></div>
+                    <div class="relative z-10 flex flex-col gap-3">
+                        <div class="flex justify-between items-end">
+                            <span class="text-sm font-bold text-slate-600">價格安全水位 (護城河)</span>
+                            <span id="out_margin_text" class="text-2xl font-black value-transition">--</span>
+                        </div>
+                        <div class="w-full bg-slate-100 rounded-full h-4 shadow-inner">
+                            <div id="margin_bar" class="h-4 rounded-full transition-all duration-700 ease-out" style="width: 0%;"></div>
+                        </div>
+                        <div id="alert_box" class="font-bold text-sm mt-1 transition-colors duration-300">
+                            </div>
                     </div>
                 </div>
 
-                <div id="alert_box" class="p-4 rounded-xl font-bold text-sm border-l-4 hidden"></div>
+                <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden flex flex-col">
+                    <div class="p-4 flex justify-between items-center bg-slate-50 border-b border-slate-200">
+                        <span class="text-sm font-bold text-slate-600"><i class="fa-solid fa-sack-dollar text-amber-500 mr-1"></i> 導流前總利潤</span>
+                        <span id="out_profit" class="text-xl font-bold text-slate-800 value-transition">--</span>
+                    </div>
+                    
+                    <div class="p-4 bg-rose-50/50 border-b border-rose-100 text-sm space-y-2">
+                        <div class="flex justify-between items-center font-bold text-rose-700 mb-2">
+                            <span><i class="fa-solid fa-receipt mr-1"></i> 預估摩擦成本明細</span>
+                            <span id="out_friction_total">--</span>
+                        </div>
+                        <div class="flex justify-between text-rose-600/80 pl-5">
+                            <span>證交稅 (0.3%)</span><span id="out_tax">--</span>
+                        </div>
+                        <div class="flex justify-between text-rose-600/80 pl-5">
+                            <span>券商手續費 (0.1425%)</span><span id="out_broker">--</span>
+                        </div>
+                        <div class="flex justify-between items-center text-rose-600/80 pl-5">
+                            <span>銀行跨國電匯費 (自訂)</span>
+                            <div class="flex items-center gap-1">
+                                <span class="text-xs">NT$</span>
+                                <input type="number" id="wire_fee" value="800" class="w-16 bg-white border border-rose-200 text-rose-700 text-right font-bold rounded p-1 outline-none focus:border-rose-400" oninput="calculate()">
+                            </div>
+                        </div>
+                    </div>
 
-                <div class="bg-indigo-50 p-4 rounded-xl border border-indigo-100 flex justify-between items-center">
-                    <div class="text-sm font-bold text-indigo-500 uppercase">未來預估總資產</div>
-                    <div id="out_future" class="text-2xl font-black text-indigo-700">--</div>
+                    <div class="p-5 bg-gradient-to-r from-emerald-50 to-teal-50 flex justify-between items-center">
+                        <span class="text-sm font-bold text-emerald-700"><i class="fa-solid fa-plane-departure mr-1"></i> 淨利匯出金額 (USD)</span>
+                        <span id="out_transfer" class="text-3xl font-black text-emerald-600 tracking-tight value-transition drop-shadow-sm">--</span>
+                    </div>
                 </div>
 
-                <div class="flex-grow bg-white rounded-xl p-2 border border-gray-200">
+                <div class="bg-gradient-to-br from-indigo-50 to-purple-50 p-5 rounded-2xl border border-indigo-100 flex justify-between items-center shadow-sm">
+                    <div>
+                        <div class="text-sm font-bold text-indigo-500 mb-1 tracking-wider"><i class="fa-solid fa-rocket mr-1"></i> 未來預估總資產</div>
+                        <div class="text-xs text-indigo-400 font-medium">現有 QQQ + 本次淨匯出款</div>
+                    </div>
+                    <div id="out_future" class="text-3xl font-black text-indigo-700 value-transition drop-shadow-sm">--</div>
+                </div>
+
+                <div class="flex-grow bg-white rounded-2xl p-4 shadow-sm border border-slate-200 relative min-h-[200px]">
                     <canvas id="growthChart"></canvas>
                 </div>
             </div>
@@ -125,93 +171,166 @@
             return pre + parseFloat(num).toLocaleString('en-US', { maximumFractionDigits: 0 });
         }
 
-        // 分離式 API 抓取 (容錯機制)
+        // 快捷設定年化報酬率
+        function setReturn(val) {
+            document.getElementById('expected_return').value = val;
+            calculate();
+        }
+
+        // 自動策略判定
+        function autoStrategy() {
+            const cst = parseFloat(document.getElementById('cost_price').value) || 0;
+            const cur = parseFloat(document.getElementById('current_price').value) || 0;
+            const mgn = cur > 0 ? (cur - cst) / cur : 0;
+            let rec = 0;
+            if (mgn >= 0.3) rec = 40;
+            else if (mgn >= 0.2) rec = 25;
+            else if (mgn >= 0.1) rec = 15;
+            document.getElementById('transfer_ratio').value = rec;
+            calculate();
+        }
+
+        // 分離式 API 抓取
         async function fetchMarketData() {
             const btnT = document.getElementById('fetch_text'), btnI = document.getElementById('fetch_icon');
             btnT.innerText = "資料同步中..."; btnI.className = "fa-solid fa-circle-notch fa-spin";
             let fxOk = false, stkOk = false;
 
-            // 1. 抓取匯率 (使用穩定 CDN 節點)
             try {
                 const r = await fetch('https://cdn.jsdelivr.net/npm/@fawazahmed0/currency-api@latest/v1/currencies/usd.json');
                 const d = await r.json();
                 if(d.usd && d.usd.twd) { document.getElementById('fx_rate').value = d.usd.twd.toFixed(2); fxOk = true; }
-            } catch (e) { console.warn("匯率失敗", e); }
+            } catch (e) { console.warn("匯率 API 異常"); }
 
-            // 2. 抓取股價 (獨立區塊，壞了不影響匯率)
             try {
                 const u = encodeURIComponent('https://query1.finance.yahoo.com/v8/finance/chart/0050.TW');
                 const r = await fetch(`https://api.allorigins.win/raw?url=${u}`);
                 const d = await r.json();
                 const p = d.chart.result[0].meta.regularMarketPrice;
                 if(p) { document.getElementById('current_price').value = p; stkOk = true; }
-            } catch (e) { console.warn("股價失敗", e); }
+            } catch (e) { console.warn("股價 API 異常"); }
 
             calculate();
 
-            // 狀態判定
             if(fxOk && stkOk) { btnI.className = "fa-solid fa-check text-green-300"; btnT.innerText = "同步完成！"; }
             else if(fxOk || stkOk) { btnI.className = "fa-solid fa-exclamation text-yellow-300"; btnT.innerText = "部分同步完成"; }
-            else { btnI.className = "fa-solid fa-xmark text-red-300"; btnT.innerText = "同步失敗"; }
+            else { btnI.className = "fa-solid fa-xmark text-rose-300"; btnT.innerText = "同步失敗，請手動輸入"; }
 
-            setTimeout(() => { btnI.className = "fa-solid fa-rotate"; btnT.innerText = "一鍵更新市價與匯率"; }, 2500);
+            setTimeout(() => { btnI.className = "fa-solid fa-cloud-arrow-down group-hover:animate-bounce"; btnT.innerText = "同步最新市價與匯率"; }, 2500);
         }
 
         function calculate() {
-            // 1. 安全取值
+            // 1. 取值
             const cst = parseFloat(document.getElementById('cost_price').value) || 0;
             const cur = parseFloat(document.getElementById('current_price').value) || 0;
             const shr = parseFloat(document.getElementById('shares').value) || 0;
             const fx  = parseFloat(document.getElementById('fx_rate').value) || 1;
             const qqq = parseFloat(document.getElementById('qqq_now').value) || 0;
+            const wire= parseFloat(document.getElementById('wire_fee').value) || 0;
             const rat = parseFloat(document.getElementById('transfer_ratio').value) || 0;
             const ret = parseFloat(document.getElementById('expected_return').value) || 0;
             const yrs = parseInt(document.getElementById('years').value) || 0;
 
-            // 2. 立即更新比例文字 (防卡死)
+            // 2. 更新滑桿文字
             document.getElementById('ratio_val').innerText = rat;
             document.getElementById('return_val').innerText = ret;
             document.getElementById('years_val').innerText = yrs;
 
-            // 儲存進瀏覽器
-            ['cost_price', 'current_price', 'shares', 'fx_rate', 'qqq_now'].forEach(k => localStorage.setItem('wf_'+k, document.getElementById(k).value));
+            // 存檔機制
+            ['cost_price', 'current_price', 'shares', 'fx_rate', 'qqq_now', 'wire_fee'].forEach(k => localStorage.setItem('wf_'+k, document.getElementById(k).value));
 
-            // 3. 核心邏輯
+            // 3. 核心邏輯計算
             const pft = (cur - cst) * shr;
             const mgn = cur > 0 ? (cur - cst) / cur : 0;
-            const twd = pft * (rat / 100);
-            const fee = twd > 0 ? (twd * 0.003) + (twd * 0.001425) + 800 : 0;
-            const net = Math.max(0, twd - fee) / fx;
-            const ftr = (qqq + (mgn > 0.1 ? net : 0)) * Math.pow(1 + (ret / 100), yrs);
+            const roi = cst > 0 ? ((cur - cst) / cst) * 100 : 0; // 計算投資報酬率
+            
+            const extractTwd = pft * (rat / 100);
+            
+            // 摩擦成本細項計算
+            let taxF = 0, broF = 0, totF = 0, netTwd = 0, netUsd = 0;
+            if (extractTwd > 0) {
+                taxF = extractTwd * 0.003;
+                broF = extractTwd * 0.001425;
+                totF = taxF + broF + wire;
+                netTwd = Math.max(0, extractTwd - totF);
+                netUsd = netTwd / fx;
+            }
 
-            // 4. 更新畫面
+            const ftr = (qqq + (mgn > 0.1 ? netUsd : 0)) * Math.pow(1 + (ret / 100), yrs);
+
+            // 4. 更新畫面文字與明細
+            // 投資報酬率徽章
+            const roiBadge = document.getElementById('roi_badge');
+            roiBadge.innerText = (roi > 0 ? '+' : '') + roi.toFixed(1) + '%';
+            roiBadge.className = `absolute top-2 right-2 text-[10px] font-bold px-1.5 py-0.5 rounded ${roi >= 0 ? 'bg-red-100 text-red-600' : 'bg-green-100 text-green-600'}`;
+
             document.getElementById('out_profit').innerText = fmtMny(pft, 'NT$ ');
-            document.getElementById('out_friction').innerText = fmtMny(fee, '- NT$ ');
-            document.getElementById('out_transfer').innerText = fmtMny(net, '$ ');
-            document.getElementById('out_future').innerText = fmtMny(ftr, '$ ');
+            
+            // 摩擦成本明細寫入
+            document.getElementById('out_tax').innerText = fmtMny(taxF, 'NT$ ');
+            document.getElementById('out_broker').innerText = fmtMny(broF, 'NT$ ');
+            document.getElementById('out_friction_total').innerText = fmtMny(totF, '- NT$ ');
+            
+            // 動態效果處理
+            const uiTransfer = document.getElementById('out_transfer');
+            const uiFuture = document.getElementById('out_future');
+            uiTransfer.innerText = fmtMny(netUsd, '$ ');
+            uiFuture.innerText = fmtMny(ftr, '$ ');
+            
+            // 觸發文字跳動效果
+            uiTransfer.classList.remove('pulse-update');
+            void uiTransfer.offsetWidth; // trigger reflow
+            uiTransfer.classList.add('pulse-update');
 
+            // 5. 狀態列與護城河視覺化
             const mT = document.getElementById('out_margin_text'), mB = document.getElementById('margin_bar');
+            const ab = document.getElementById('alert_box'), aBg = document.getElementById('alert_bg');
             mT.innerText = (mgn * 100).toFixed(2) + '%';
             mB.style.width = Math.max(0, Math.min(mgn * 200, 100)) + '%';
             
-            const ab = document.getElementById('alert_box');
-            ab.style.display = 'block';
-            if (mgn >= 0.2) { mB.className="h-3 rounded-full bg-green-500"; mT.className="text-xl font-black text-green-600"; ab.className="p-3 rounded-lg text-sm bg-green-50 text-green-800 border-l-4 border-green-500"; ab.innerHTML="✅ 水位安全，建議導流。"; }
-            else if (mgn >= 0.1) { mB.className="h-3 rounded-full bg-yellow-400"; mT.className="text-xl font-black text-yellow-600"; ab.className="p-3 rounded-lg text-sm bg-yellow-50 text-yellow-800 border-l-4 border-yellow-500"; ab.innerHTML="⚠️ 護城河縮減，請評估降低比例。"; }
-            else { mB.className="h-3 rounded-full bg-red-500"; mT.className="text-xl font-black text-red-600"; ab.className="p-3 rounded-lg text-sm bg-red-50 text-red-800 border-l-4 border-red-500"; ab.innerHTML="🚨 停看聽：利潤過低或虧損，暫停導流。"; }
+            if (mgn >= 0.2) { 
+                mB.className="h-4 rounded-full bg-gradient-to-r from-emerald-400 to-green-500 shadow-md"; 
+                mT.className="text-2xl font-black text-green-600"; 
+                aBg.className="absolute inset-0 opacity-[0.03] transition-colors duration-500 bg-green-500";
+                ab.className="font-bold text-sm mt-2 text-green-700"; 
+                ab.innerHTML="<i class='fa-solid fa-circle-check mr-1'></i> 水位安全！已扣除手續費明細，建議執行導流。"; 
+            }
+            else if (mgn >= 0.1) { 
+                mB.className="h-4 rounded-full bg-gradient-to-r from-amber-400 to-yellow-500 shadow-md"; 
+                mT.className="text-2xl font-black text-amber-500"; 
+                aBg.className="absolute inset-0 opacity-[0.03] transition-colors duration-500 bg-amber-500";
+                ab.className="font-bold text-sm mt-2 text-amber-700"; 
+                ab.innerHTML="<i class='fa-solid fa-triangle-exclamation mr-1'></i> 護城河縮減。點擊左側「智能判定」可自動降低比例。"; 
+            }
+            else { 
+                mB.className="h-4 rounded-full bg-gradient-to-r from-rose-400 to-red-500 shadow-md"; 
+                mT.className="text-2xl font-black text-rose-600"; 
+                aBg.className="absolute inset-0 opacity-[0.03] transition-colors duration-500 bg-rose-500";
+                ab.className="font-bold text-sm mt-2 text-rose-700"; 
+                ab.innerHTML="<i class='fa-solid fa-ban mr-1'></i> 停看聽：利潤無法覆蓋跨國摩擦成本，暫停導流！"; 
+            }
 
-            // 5. 更新圖表
+            // 6. 圖表更新
             const lbls = [], dta = [];
-            for (let i = 0; i <= yrs; i++) { lbls.push(`第${i}年`); dta.push((qqq + (mgn > 0.1 ? net : 0)) * Math.pow(1 + (ret / 100), i)); }
+            for (let i = 0; i <= yrs; i++) { lbls.push(`第${i}年`); dta.push((qqq + (mgn > 0.1 ? netUsd : 0)) * Math.pow(1 + (ret / 100), i)); }
             if (myChart) myChart.destroy();
             const ctx = document.getElementById('growthChart').getContext('2d');
-            let grad = ctx.createLinearGradient(0,0,0,300); grad.addColorStop(0, 'rgba(79,70,229,0.3)'); grad.addColorStop(1, 'transparent');
-            myChart = new Chart(ctx, { type: 'line', data: { labels: lbls, datasets: [{ data: dta, borderColor: '#4f46e5', backgroundColor: grad, fill: true, tension: 0.3 }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { x: { display: false } } } });
+            let grad = ctx.createLinearGradient(0,0,0,300); 
+            grad.addColorStop(0, 'rgba(99, 102, 241, 0.4)'); 
+            grad.addColorStop(1, 'rgba(99, 102, 241, 0)');
+            myChart = new Chart(ctx, { 
+                type: 'line', 
+                data: { labels: lbls, datasets: [{ data: dta, borderColor: '#4f46e5', backgroundColor: grad, fill: true, tension: 0.4, borderWidth: 3, pointBackgroundColor: '#fff', pointBorderColor: '#4f46e5', pointBorderWidth: 2, pointRadius: 4 }] }, 
+                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false }, tooltip: { backgroundColor: 'rgba(15, 23, 42, 0.9)', padding: 12, bodyFont: {size: 14, weight: 'bold'}, callbacks: { label: function(c) { return '$ ' + c.parsed.y.toLocaleString('en-US', {maximumFractionDigits:0}); } } } }, scales: { y: { grid: { borderDash: [4, 4], color: '#f1f5f9' }, ticks: { font: {family: 'system-ui', weight: '500'} } }, x: { grid: { display: false } } }, interaction: { intersect: false, mode: 'index' } } 
+            });
         }
 
         window.onload = () => {
-            const defs = { cost_price: 48, current_price: 77, shares: 1602, fx_rate: 31.4, qqq_now: 25660 };
-            ['cost_price', 'current_price', 'shares', 'fx_rate', 'qqq_now'].forEach(k => { const s = localStorage.getItem('wf_'+k); document.getElementById(k).value = s !== null ? s : defs[k]; });
+            const defs = { cost_price: 48, current_price: 77, shares: 1602, fx_rate: 31.4, qqq_now: 25660, wire_fee: 800 };
+            ['cost_price', 'current_price', 'shares', 'fx_rate', 'qqq_now', 'wire_fee'].forEach(k => { 
+                const s = localStorage.getItem('wf_'+k); 
+                document.getElementById(k).value = s !== null ? s : defs[k]; 
+            });
             calculate();
         };
     </script>
