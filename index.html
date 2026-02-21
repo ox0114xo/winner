@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WinnerFlow 贏家決策系統</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body class="bg-gray-100 text-gray-800 font-sans antialiased p-4 md:p-8">
+
+    <div class="max-w-4xl mx-auto bg-white rounded-2xl shadow-xl overflow-hidden">
+        <div class="bg-blue-900 text-white p-6 text-center">
+            <h1 class="text-3xl font-bold">🛡️ WinnerFlow 贏家決策系統</h1>
+            <p class="mt-2 text-blue-200">從台股利潤，灌溉美股成長 (Vercel 極速版)</p>
+        </div>
+
+        <div class="p-6 md:flex gap-8">
+            <div class="md:w-1/2 space-y-4">
+                <h2 class="text-xl font-bold border-b pb-2">📝 自訂參數</h2>
+                
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm text-gray-500">0050 買進均價</label>
+                        <input type="number" id="cost_price" value="48" class="w-full border rounded p-2 mt-1" oninput="calculate()">
+                    </div>
+                    <div>
+                        <label class="block text-sm text-gray-500">0050 目前市價</label>
+                        <input type="number" id="current_price" value="77" class="w-full border rounded p-2 mt-1" oninput="calculate()">
+                    </div>
+                    <div>
+                        <label class="block text-sm text-gray-500">持有股數</label>
+                        <input type="number" id="shares" value="1602" class="w-full border rounded p-2 mt-1" oninput="calculate()">
+                    </div>
+                    <div>
+                        <label class="block text-sm text-gray-500">目前匯率</label>
+                        <input type="number" id="fx_rate" value="31.4" step="0.1" class="w-full border rounded p-2 mt-1" oninput="calculate()">
+                    </div>
+                </div>
+
+                <div class="pt-4 border-t mt-4">
+                    <label class="block text-sm text-gray-500">QQQ 目前美金</label>
+                    <input type="number" id="qqq_now" value="25660" class="w-full border rounded p-2 mt-1 mb-4" oninput="calculate()">
+                    
+                    <label class="block text-sm text-gray-500">獲利導流比例 (<span id="ratio_val">25</span>%)</label>
+                    <input type="range" id="transfer_ratio" min="0" max="100" value="25" class="w-full mt-1 mb-4" oninput="calculate()">
+
+                    <label class="block text-sm text-gray-500">預期年報酬率 (<span id="return_val">11</span>%)</label>
+                    <input type="range" id="expected_return" min="1" max="25" value="11" class="w-full mt-1 mb-4" oninput="calculate()">
+                    
+                    <label class="block text-sm text-gray-500">預估年限 (<span id="years_val">5</span> 年)</label>
+                    <input type="range" id="years" min="1" max="30" value="5" class="w-full mt-1" oninput="calculate()">
+                </div>
+            </div>
+
+            <div class="md:w-1/2 mt-8 md:mt-0 bg-gray-50 p-6 rounded-xl border border-gray-100">
+                <h2 class="text-xl font-bold border-b pb-2 mb-4">📊 計算結果</h2>
+                
+                <div class="grid grid-cols-2 gap-4 mb-6">
+                    <div class="bg-white p-4 rounded shadow-sm">
+                        <div class="text-sm text-gray-500">安全水位 (%)</div>
+                        <div id="out_margin" class="text-2xl font-bold text-blue-600">--</div>
+                    </div>
+                    <div class="bg-white p-4 rounded shadow-sm">
+                        <div class="text-sm text-gray-500">總利潤 (TWD)</div>
+                        <div id="out_profit" class="text-2xl font-bold text-gray-800">--</div>
+                    </div>
+                    <div class="bg-white p-4 rounded shadow-sm border-l-4 border-green-500">
+                        <div class="text-sm text-gray-500">本季導流 (USD)</div>
+                        <div id="out_transfer" class="text-2xl font-bold text-green-600">--</div>
+                    </div>
+                    <div class="bg-white p-4 rounded shadow-sm border-l-4 border-purple-500">
+                        <div class="text-sm text-gray-500">未來預估 (USD)</div>
+                        <div id="out_future" class="text-2xl font-bold text-purple-600">--</div>
+                    </div>
+                </div>
+
+                <div id="alert_box" class="p-4 rounded-lg font-bold mb-6 text-sm">
+                    </div>
+
+                <canvas id="growthChart" width="400" height="200"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let myChart = null;
+
+        function formatMoney(num) {
+            return '$' + parseFloat(num).toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 2 });
+        }
+
+        function calculate() {
+            // 取得輸入值
+            const cost = parseFloat(document.getElementById('cost_price').value) || 0;
+            const current = parseFloat(document.getElementById('current_price').value) || 0;
+            const shares = parseFloat(document.getElementById('shares').value) || 0;
+            const fx = parseFloat(document.getElementById('fx_rate').value) || 1;
+            const qqq = parseFloat(document.getElementById('qqq_now').value) || 0;
+            
+            const ratio = parseFloat(document.getElementById('transfer_ratio').value);
+            const ret = parseFloat(document.getElementById('expected_return').value);
+            const years = parseInt(document.getElementById('years').value);
+
+            // 更新滑桿數字顯示
+            document.getElementById('ratio_val').innerText = ratio;
+            document.getElementById('return_val').innerText = ret;
+            document.getElementById('years_val').innerText = years;
+
+            // 核心計算
+            const totalProfit = (current - cost) * shares;
+            const safetyMargin = current > 0 ? (current - cost) / current : 0;
+            const transferUsd = (totalProfit * (ratio / 100)) / fx;
+            
+            let principal = qqq;
+            if (safetyMargin > 0.2) {
+                principal += transferUsd;
+            }
+            const futureValue = principal * Math.pow(1 + (ret / 100), years);
+
+            // 顯示結果
+            document.getElementById('out_margin').innerText = (safetyMargin * 100).toFixed(2) + '%';
+            document.getElementById('out_profit').innerText = formatMoney(totalProfit);
+            document.getElementById('out_transfer').innerText = formatMoney(transferUsd);
+            document.getElementById('out_future').innerText = formatMoney(futureValue);
+
+            // 提示訊息邏輯
+            const alertBox = document.getElementById('alert_box');
+            if (safetyMargin > 0.2) {
+                alertBox.className = "p-4 rounded-lg font-bold mb-6 text-sm bg-green-100 text-green-800";
+                alertBox.innerHTML = "✅ 贏家信號：水位安全！建議進行導流。";
+            } else if (safetyMargin > 0) {
+                alertBox.className = "p-4 rounded-lg font-bold mb-6 text-sm bg-yellow-100 text-yellow-800";
+                alertBox.innerHTML = "⚠️ 守備信號：護城河縮減。建議暫緩導流（以下預測不含本次導流）。";
+            } else {
+                alertBox.className = "p-4 rounded-lg font-bold mb-6 text-sm bg-red-100 text-red-800";
+                alertBox.innerHTML = "🚨 虧損信號：目前帳面虧損。請重新評估（以下預測不含本次導流）。";
+            }
+
+            // 繪製圖表
+            updateChart(principal, ret, years);
+        }
+
+        function updateChart(principal, ret, years) {
+            const labels = [];
+            const data = [];
+            for (let i = 0; i <= years; i++) {
+                labels.push('第 ' + i + ' 年');
+                data.push(principal * Math.pow(1 + (ret / 100), i));
+            }
+
+            if (myChart) {
+                myChart.destroy();
+            }
+
+            const ctx = document.getElementById('growthChart').getContext('2d');
+            myChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: '預估資產 (USD)',
+                        data: data,
+                        borderColor: 'rgba(147, 51, 234, 1)', // Purple
+                        backgroundColor: 'rgba(147, 51, 234, 0.2)',
+                        fill: true,
+                        tension: 0.3
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    scales: {
+                        y: { beginAtZero: false }
+                    }
+                }
+            });
+        }
+
+        // 網頁載入時先執行一次計算
+        window.onload = calculate;
+    </script>
+</body>
+</html>
