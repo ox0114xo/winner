@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>WinnerFlow | 專業版</title>
+    <title>WinnerFlow Pro</title>
     
     <link rel="manifest" href="manifest.json">
     <meta name="apple-mobile-web-app-capable" content="yes">
@@ -16,139 +16,135 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     
     <style>
-        body { background: #0f172a; color: #f1f5f9; font-family: system-ui, sans-serif; -webkit-tap-highlight-color: transparent; }
-        .glass { background: rgba(30, 41, 59, 0.85); backdrop-filter: blur(20px); border: 1px solid rgba(255, 255, 255, 0.08); }
-        .input-box { background: #020617; border: 2px solid #334155; color: #fff; text-align: center; border-radius: 12px; padding: 10px; font-weight: 800; font-size: 1.1rem; width: 100%; outline: none; }
-        .input-box:focus { border-color: #10b981; }
+        body { background: #020617; color: #f8fafc; font-family: system-ui, sans-serif; -webkit-tap-highlight-color: transparent; }
+        .glass { background: rgba(30, 41, 59, 0.7); backdrop-filter: blur(15px); border: 1px solid rgba(255, 255, 255, 0.1); }
+        /* 加大輸入框與加粗文字 */
+        .input-hero { background: #0f172a; border: 2px solid #334155; color: #fff; text-align: center; border-radius: 20px; padding: 18px; font-weight: 900; font-size: 1.5rem; width: 100%; outline: none; }
+        .input-hero:focus { border-color: #10b981; box-shadow: 0 0 20px rgba(16, 185, 129, 0.2); }
         
-        /* 底部安裝欄動畫 */
+        /* 底部安裝欄吸附動畫 */
         #install-banner { 
-            display: none; 
-            position: fixed; 
-            bottom: 20px; 
-            left: 50%; 
-            transform: translateX(-50%) translateY(150%);
-            width: calc(100% - 32px);
-            max-width: 500px;
-            transition: transform 0.6s cubic-bezier(0.22, 1, 0.36, 1);
+            display: none; position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%) translateY(150%);
+            width: calc(100% - 24px); max-width: 500px; z-index: 100; transition: transform 0.6s cubic-bezier(0.23, 1, 0.32, 1);
         }
         #install-banner.show { display: block; transform: translateX(-50%) translateY(0); }
         
-        input[type=range] { -webkit-appearance: none; background: transparent; height: 35px; }
-        input[type=range]::-webkit-slider-runnable-track { background: #1e293b; height: 6px; border-radius: 3px; }
-        input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; height: 22px; width: 22px; border-radius: 50%; background: #10b981; margin-top: -8px; border: 2px solid #fff; }
+        input[type=range] { -webkit-appearance: none; background: transparent; height: 50px; }
+        input[type=range]::-webkit-slider-runnable-track { background: #1e293b; height: 10px; border-radius: 5px; }
+        input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; height: 30px; width: 30px; border-radius: 50%; background: #10b981; margin-top: -10px; border: 4px solid #fff; box-shadow: 0 0 15px rgba(16, 185, 129, 0.4); }
+        input[type=number]::-webkit-inner-spin-button { -webkit-appearance: none; }
     </style>
 </head>
 
-<body class="min-h-screen p-4 md:p-8 flex flex-col items-center pb-24 md:pb-8">
+<body class="min-h-screen p-3 md:p-8 flex flex-col items-center pb-32">
 
-    <div class="w-full max-w-5xl space-y-6">
+    <div class="w-full max-w-5xl space-y-8">
         
-        <div class="flex justify-between items-center px-2">
-            <div class="flex items-center gap-3">
-                <img src="icon.png" class="w-12 h-12 rounded-xl shadow-lg border border-white/10">
+        <div class="flex flex-col md:flex-row justify-between items-center gap-6 px-2">
+            <div class="flex items-center gap-4">
+                <img src="icon.png" class="w-16 h-16 rounded-2xl shadow-2xl border border-white/10">
                 <div>
-                    <h1 class="text-xl font-black italic tracking-tighter">WINNER<span class="text-emerald-400">FLOW</span></h1>
-                    <p id="sync_status" class="text-[9px] text-slate-400 font-bold uppercase tracking-widest mt-0.5">系統待命中</p>
+                    <h1 class="text-3xl font-black italic tracking-tighter text-white">WINNER<span class="text-emerald-400 font-black">FLOW</span></h1>
+                    <p id="sync_status" class="text-xs font-bold text-slate-500 uppercase tracking-widest mt-1">系統等待資料中</p>
                 </div>
             </div>
-            <button onclick="fetchMarketData()" class="bg-indigo-600 text-white px-5 py-2.5 rounded-xl font-black text-xs tracking-widest active:scale-90 transition-all shadow-lg">
-                <i id="f-icon" class="fa-solid fa-rotate"></i> <span>同步數據</span>
+            <button onclick="fetchMarketData()" class="w-full md:w-auto bg-indigo-600 hover:bg-indigo-500 text-white px-8 py-4 rounded-2xl font-black text-sm tracking-widest active:scale-95 transition-all shadow-xl shadow-indigo-600/30">
+                <i id="f-icon" class="fa-solid fa-rotate-right mr-2"></i> 同步數據
             </button>
         </div>
 
-        <div class="lg:flex gap-6 space-y-6 lg:space-y-0">
-            <div class="lg:w-5/12 space-y-4">
-                <div class="glass rounded-[2rem] p-6 space-y-6">
-                    <div class="grid grid-cols-2 gap-4">
-                        <div class="space-y-1">
-                            <label class="text-[10px] font-black text-slate-400 block text-center uppercase">買進均價</label>
-                            <input type="number" id="cost_price" class="input-box" oninput="calculate()">
+        <div class="lg:flex gap-8 space-y-8 lg:space-y-0">
+            <div class="lg:w-5/12 space-y-6">
+                <div class="glass rounded-[3rem] p-8 space-y-8">
+                    <div class="grid grid-cols-2 gap-6">
+                        <div class="space-y-2">
+                            <label class="text-xs font-black text-slate-400 block text-center uppercase tracking-widest">買進均價</label>
+                            <input type="number" id="cost_price" class="input-hero" oninput="calculate()">
                         </div>
-                        <div class="space-y-1 relative">
-                            <label class="text-[10px] font-black text-slate-400 block text-center uppercase">目前市價</label>
-                            <input type="number" id="current_price" class="input-box text-emerald-400" oninput="calculate()">
-                            <span id="roi_badge" class="absolute -bottom-2 left-1/2 -translate-x-1/2 text-[8px] font-black px-2 py-0.5 rounded-full border border-slate-700 bg-black shadow-xl">--%</span>
+                        <div class="space-y-2 relative">
+                            <label class="text-xs font-black text-slate-400 block text-center uppercase tracking-widest">目前市價</label>
+                            <input type="number" id="current_price" class="input-hero text-emerald-400" oninput="calculate()">
+                            <span id="roi_badge" class="absolute -bottom-3 left-1/2 -translate-x-1/2 text-[11px] font-black px-3 py-1 rounded-full border border-slate-700 bg-black shadow-2xl">--%</span>
                         </div>
-                        <div class="space-y-1">
-                            <label class="text-[10px] font-black text-slate-400 block text-center uppercase">持有股數</label>
-                            <input type="number" id="shares" class="input-box" oninput="calculate()">
+                        <div class="space-y-2">
+                            <label class="text-xs font-black text-slate-400 block text-center uppercase tracking-widest">持有股數</label>
+                            <input type="number" id="shares" class="input-hero" oninput="calculate()">
                         </div>
-                        <div class="space-y-1">
-                            <label class="text-[10px] font-black text-slate-400 block text-center uppercase">即時匯率</label>
-                            <input type="number" id="fx_rate" class="input-box text-indigo-400" oninput="calculate()">
+                        <div class="space-y-2">
+                            <label class="text-xs font-black text-slate-400 block text-center uppercase tracking-widest">即時匯率</label>
+                            <input type="number" id="fx_rate" step="0.1" class="input-hero text-indigo-400" oninput="calculate()">
                         </div>
                     </div>
 
-                    <div class="bg-indigo-950/40 p-5 rounded-2xl border border-indigo-500/20 shadow-inner">
-                        <label class="text-[9px] font-black text-indigo-300 block mb-2 text-center uppercase tracking-widest">QQQ 美金庫存</label>
-                        <input type="number" id="qqq_now" class="w-full bg-transparent border-none text-white text-3xl font-black text-center focus:ring-0 outline-none" oninput="calculate()">
+                    <div class="bg-indigo-950/40 p-6 rounded-3xl border border-indigo-500/20 shadow-inner">
+                        <label class="text-xs font-black text-indigo-400 block mb-2 text-center uppercase tracking-widest italic">QQQ 美金資產庫存</label>
+                        <input type="number" id="qqq_now" class="w-full bg-transparent border-none text-white text-5xl font-black text-center focus:ring-0 outline-none" oninput="calculate()">
                     </div>
 
-                    <div class="space-y-6" ontouchstart="hideKeyboard()">
+                    <div class="space-y-8" ontouchstart="hideKeyboard()">
                         <div>
-                            <div class="flex justify-between text-[11px] font-black text-slate-400 mb-2 uppercase">
-                                <span>導流比例</span> <span class="text-emerald-400"><span id="ratio_val">25</span>%</span>
+                            <div class="flex justify-between text-sm font-black text-slate-300 mb-2 uppercase">
+                                <span>導流比例</span> <span class="text-emerald-400 text-xl"><span id="ratio_val">25</span>%</span>
                             </div>
                             <input type="range" id="transfer_ratio" min="0" max="100" value="25" class="w-full" oninput="uiInteract(); calculate()">
                         </div>
-                        <div class="grid grid-cols-2 gap-4">
-                            <div><label class="text-[10px] font-black text-slate-500 block uppercase">年化 (<span id="ret_val">11</span>%)</label><input type="range" id="expected_return" min="1" max="25" value="11" oninput="uiInteract(); calculate()"></div>
-                            <div><label class="text-[10px] font-black text-slate-500 block uppercase">年限 (<span id="yrs_val">5</span>年)</label><input type="range" id="years" min="1" max="30" value="5" oninput="uiInteract(); calculate()"></div>
+                        <div class="grid grid-cols-2 gap-8">
+                            <div><label class="text-xs font-black text-slate-500 block uppercase">年化 (<span id="ret_val">11</span>%)</label><input type="range" id="expected_return" min="1" max="25" value="11" oninput="uiInteract(); calculate()"></div>
+                            <div><label class="text-xs font-black text-slate-500 block uppercase">年限 (<span id="yrs_val">5</span>年)</label><input type="range" id="years" min="1" max="30" value="5" oninput="uiInteract(); calculate()"></div>
                         </div>
                     </div>
                 </div>
             </div>
 
-            <div class="lg:w-7/12 space-y-4" ontouchstart="hideKeyboard()">
-                <div class="glass rounded-[2rem] p-6 space-y-6 h-full flex flex-col">
+            <div class="lg:w-7/12 space-y-6" ontouchstart="hideKeyboard()">
+                <div class="glass rounded-[3rem] p-8 space-y-8 h-full flex flex-col">
                     <div class="flex justify-between items-start">
                         <div>
-                            <span class="text-[9px] font-black text-slate-500 uppercase italic">Profit Margin</span>
-                            <div id="out_margin_text" class="text-4xl font-black text-white mt-1">--</div>
+                            <span class="text-xs font-black text-slate-500 uppercase tracking-widest">Profit Margin</span>
+                            <div id="out_margin_text" class="text-6xl font-black text-white mt-1">--</div>
                         </div>
-                        <div id="alert_box" class="text-[9px] font-bold px-3 py-1.5 rounded-lg bg-slate-950 border border-slate-800 text-slate-400 uppercase tracking-widest">分析中</div>
+                        <div id="alert_box" class="text-xs font-black px-5 py-2.5 rounded-2xl bg-slate-900 border border-slate-700 text-slate-400 uppercase tracking-widest">分析中</div>
                     </div>
 
-                    <div class="w-full bg-slate-900 h-1.5 rounded-full overflow-hidden">
-                        <div id="margin_bar" class="h-full transition-all duration-1000" style="width: 0%"></div>
+                    <div class="w-full bg-slate-900 h-2.5 rounded-full overflow-hidden shadow-inner border border-white/5">
+                        <div id="margin_bar" class="h-full transition-all duration-1000 ease-out shadow-[0_0_20px_#10b981]" style="width: 0%"></div>
                     </div>
 
-                    <div class="grid grid-cols-2 gap-4">
-                        <div class="bg-emerald-500/5 p-4 rounded-2xl border border-emerald-500/10 text-center">
-                            <span class="text-[9px] font-black text-emerald-500/60 block mb-1 uppercase">預計淨導流</span>
-                            <span id="out_transfer" class="text-xl font-black text-emerald-400">--</span>
+                    <div class="grid grid-cols-2 gap-6">
+                        <div class="bg-emerald-500/5 p-6 rounded-[2rem] border border-emerald-500/10 text-center">
+                            <span class="text-xs font-black text-emerald-500/60 block mb-2 uppercase tracking-widest">本季預計導流</span>
+                            <span id="out_transfer" class="text-4xl font-black text-emerald-400 tracking-tighter">--</span>
                         </div>
-                        <div class="bg-white/5 p-4 rounded-2xl border border-white/5 text-center">
-                            <span class="text-[9px] font-black text-slate-500 block mb-1 uppercase tracking-widest">預估總資產</span>
-                            <span id="out_future" class="text-xl font-black text-white">--</span>
+                        <div class="bg-white/5 p-6 rounded-[2rem] border border-white/5 text-center">
+                            <span class="text-xs font-black text-slate-500 block mb-2 uppercase tracking-widest">未來預估資產</span>
+                            <span id="out_future" class="text-4xl font-black text-white tracking-tighter">--</span>
                         </div>
                     </div>
 
-                    <div class="flex-grow min-h-[160px] mt-4">
+                    <div class="flex-grow min-h-[200px] mt-4">
                         <canvas id="growthChart"></canvas>
                     </div>
 
-                    <div id="milestone" class="text-[10px] font-bold text-center py-3 px-4 rounded-xl bg-indigo-500/5 text-indigo-300 uppercase tracking-widest border border-indigo-500/10 italic">
-                        數據處理中...
+                    <div id="milestone" class="text-sm font-black text-center py-5 px-6 rounded-2xl bg-indigo-500/5 text-indigo-300 uppercase tracking-widest border border-indigo-500/10 italic">
+                        正在推算里程碑...
                     </div>
                 </div>
             </div>
         </div>
     </div>
 
-    <div id="install-banner" class="z-[100]">
-        <div class="bg-indigo-600 rounded-2xl shadow-2xl p-4 flex justify-between items-center text-white border border-white/20">
-            <div class="flex items-center gap-3">
-                <img src="icon.png" class="w-10 h-10 rounded-lg shadow-md">
+    <div id="install-banner">
+        <div class="bg-indigo-600 rounded-3xl shadow-2xl p-5 flex justify-between items-center text-white border border-white/20">
+            <div class="flex items-center gap-4">
+                <img src="icon.png" class="w-14 h-14 rounded-2xl shadow-xl">
                 <div>
-                    <p class="font-black text-sm tracking-tighter">WinnerFlow 贏家系統</p>
-                    <p class="text-[10px] opacity-80" id="install-hint">安裝到桌面使用更流暢</p>
+                    <p class="font-black text-lg tracking-tighter leading-none">WinnerFlow</p>
+                    <p class="text-xs opacity-90 mt-2" id="install-hint">安裝到桌面使用更快速</p>
                 </div>
             </div>
-            <div class="flex items-center gap-2">
-                <button onclick="dismissInstall()" class="text-xs opacity-60 px-2 py-2">稍後</button>
-                <button id="install-btn" class="bg-white text-indigo-700 px-5 py-2 rounded-xl font-black text-xs shadow-md active:scale-95 transition-all">立即安裝</button>
+            <div class="flex gap-2">
+                <button onclick="dismissInstall()" class="text-sm font-bold opacity-60 px-3 py-2">稍後</button>
+                <button id="install-btn" class="bg-white text-indigo-700 px-6 py-3 rounded-2xl font-black text-sm shadow-xl active:scale-90 transition-all">立即安裝</button>
             </div>
         </div>
     </div>
@@ -156,22 +152,20 @@
     <script>
         let myChart = null, deferredPrompt = null;
 
-        // PWA 註冊
         if ('serviceWorker' in navigator) navigator.serviceWorker.register('./sw.js');
 
-        // 安裝偵測
         const isIos = /iphone|ipad|ipod/.test(navigator.userAgent.toLowerCase());
         const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone;
 
         if (!isStandalone) {
             if (isIos) {
-                document.getElementById('install-hint').innerText = "點擊 Safari 分享鍵 → 加入主畫面";
+                document.getElementById('install-hint').innerText = "點擊分享按鈕 → 加入主畫面";
                 document.getElementById('install-btn').style.display = 'none';
-                setTimeout(() => document.getElementById('install-banner').classList.add('show'), 2000);
+                setTimeout(() => document.getElementById('install-banner').classList.add('show'), 3000);
             } else {
                 window.addEventListener('beforeinstallprompt', (e) => {
                     e.preventDefault(); deferredPrompt = e;
-                    setTimeout(() => document.getElementById('install-banner').classList.add('show'), 2000);
+                    setTimeout(() => document.getElementById('install-banner').classList.add('show'), 3000);
                 });
             }
         }
@@ -186,38 +180,43 @@
         });
 
         function dismissInstall() { 
-            const b = document.getElementById('install-banner');
-            b.style.transform = "translateX(-50%) translateY(150%)";
-            setTimeout(() => b.style.display = 'none', 600);
+            document.getElementById('install-banner').classList.remove('show');
+            setTimeout(() => document.getElementById('install-banner').style.display = 'none', 600);
         }
 
-        // --- 核心運算 ---
+        function fmt(n, p = '') { return p + parseFloat(n).toLocaleString('en-US', {maximumFractionDigits: 0}); }
+        function hideKeyboard() { if (document.activeElement?.tagName === 'INPUT') document.activeElement.blur(); }
+        function uiInteract() { hideKeyboard(); if (navigator.vibrate) navigator.vibrate(15); }
+
         async function fetchMarketData() {
             uiInteract();
-            const bT = document.querySelector('#f-icon').parentNode.querySelector('span'), bI = document.querySelector('#f-icon'), sS = document.getElementById('sync_status');
-            bT.innerText = "同步中..."; bI.className = "fa-solid fa-circle-notch fa-spin";
+            const bT = document.querySelector('#f-icon').parentNode.querySelector('span'), bI = document.getElementById('f-icon'), status = document.getElementById('sync_status');
+            bT.innerText = "同步中..."; bI.className = "fa-solid fa-rotate-right fa-spin";
             
             let fx = null, stk = null;
             try { const r = await fetch('https://open.er-api.com/v6/latest/USD'); const d = await r.json(); fx = d.rates.TWD; } catch(e){}
-            try { const r = await fetch('https://openapi.twse.com.tw/v1/exchangeReport/STOCK_DAY_ALL'); const d = await r.json(); stk = parseFloat(d.find(x => x.Code === "0050")?.ClosingPrice); } catch(e){}
+            try { 
+                const r = await fetch('https://openapi.twse.com.tw/v1/exchangeReport/STOCK_DAY_ALL'); const d = await r.json(); 
+                stk = parseFloat(d.find(x => x.Code === "0050")?.ClosingPrice); 
+            } catch(e){}
 
             if (fx) document.getElementById('fx_rate').value = fx.toFixed(2);
             if (stk) document.getElementById('current_price').value = stk;
             
             if (fx || stk) {
                 calculate();
-                bI.className = "fa-solid fa-check text-emerald-400"; bT.innerText = "成功";
-                const n = new Date(); sS.innerText = `更新於 ${n.getHours()}:${n.getMinutes().toString().padStart(2,'0')}`;
-                sS.className = "text-[9px] text-emerald-400 font-bold uppercase tracking-widest mt-0.5";
+                bI.className = "fa-solid fa-check text-emerald-400"; bT.innerText = "同步成功";
+                const n = new Date(); status.innerText = `更新時間: ${n.getHours()}:${n.getMinutes().toString().padStart(2,'0')}`;
+                status.className = "text-xs font-bold text-emerald-500 mt-1";
             } else {
-                bI.className = "fa-solid fa-xmark text-rose-500"; bT.innerText = "失敗";
+                bI.className = "fa-solid fa-xmark text-rose-500"; bT.innerText = "同步失敗";
             }
-            setTimeout(() => { bI.className = "fa-solid fa-rotate"; bT.innerText = "同步數據"; }, 2500);
+            setTimeout(() => { bI.className = "fa-solid fa-rotate-right"; bT.innerText = "同步數據"; }, 3000);
         }
 
         function calculate() {
             const c = parseFloat(document.getElementById('cost_price').value) || 0;
-            const p = parseFloat(document.getElementById('current_price').value) || 0;
+            const cur = parseFloat(document.getElementById('current_price').value) || 0;
             const s = parseFloat(document.getElementById('shares').value) || 0;
             const fx = parseFloat(document.getElementById('fx_rate').value) || 1;
             const q = parseFloat(document.getElementById('qqq_now').value) || 0;
@@ -229,43 +228,49 @@
             document.getElementById('ret_val').innerText = re;
             document.getElementById('yrs_val').innerText = y;
 
-            localStorage.setItem('winner_v7', JSON.stringify({c, p, s, fx, q}));
+            localStorage.setItem('winner_v8', JSON.stringify({c, cur, s, fx, q}));
 
-            const profit = (p - c) * s;
-            const margin = p > 0 ? (p - c) / p : 0;
+            const profit = (cur - c) * s;
+            const margin = cur > 0 ? (cur - c) / cur : 0;
+            const roi = c > 0 ? ((cur - c) / c) * 100 : 0;
             const netUsd = Math.max(0, (profit * (r / 100)) - (profit * (r / 100) * 0.004425 + 850)) / fx;
             const principal = q + (margin > 0.1 ? netUsd : 0);
             const future = principal * Math.pow(1 + (re / 100), y);
 
             document.getElementById('out_margin_text').innerText = (margin * 100).toFixed(1) + '%';
-            document.getElementById('out_transfer').innerText = '$' + netUsd.toLocaleString(undefined, {maximumFractionDigits: 0});
-            document.getElementById('out_future').innerText = '$' + future.toLocaleString(undefined, {maximumFractionDigits: 0});
+            document.getElementById('out_transfer').innerText = fmt(netUsd, '$');
+            document.getElementById('out_future').innerText = fmt(future, '$');
 
             const roiB = document.getElementById('roi_badge');
-            const roi = c > 0 ? ((p - c) / c) * 100 : 0;
             roiB.innerText = (roi >= 0 ? '+' : '') + roi.toFixed(1) + '%';
-            roiB.className = `absolute -bottom-2 left-1/2 -translate-x-1/2 text-[8px] font-black px-2 py-0.5 rounded-full border border-slate-700 bg-black ${roi >= 0 ? 'text-emerald-400' : 'text-rose-400'}`;
+            roiB.className = `absolute -bottom-3 left-1/2 -translate-x-1/2 text-[11px] font-black px-3 py-1 rounded-full border border-slate-700 bg-black ${roi >= 0 ? 'text-emerald-400' : 'text-rose-500'}`;
 
             const mb = document.getElementById('margin_bar'), ab = document.getElementById('alert_box');
             mb.style.width = Math.min(100, Math.max(0, margin * 200)) + '%';
-            if (margin >= 0.2) { mb.className = "h-full bg-emerald-500 shadow-[0_0_15px_#10b981]"; ab.innerText = "SAFE"; ab.className = "text-[9px] font-bold px-3 py-1 bg-emerald-500/10 text-emerald-400 rounded-lg"; }
-            else if (margin >= 0.1) { mb.className = "h-full bg-amber-500 shadow-[0_0_15px_#f59e0b]"; ab.innerText = "WARN"; ab.className = "text-[9px] font-bold px-3 py-1 bg-amber-500/10 text-amber-400 rounded-lg"; }
-            else { mb.className = "h-full bg-rose-500 shadow-[0_0_15px_#f43f5e]"; ab.innerText = "STOP"; ab.className = "text-[9px] font-bold px-3 py-1 bg-rose-500/10 text-rose-500 rounded-lg"; }
+            if (margin >= 0.2) { mb.className = "h-full bg-emerald-500 shadow-[0_0_20px_#10b981]"; ab.innerText = "SAFE"; ab.className = "text-xs font-black px-5 py-2 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400"; }
+            else if (margin >= 0.1) { mb.className = "h-full bg-amber-500 shadow-[0_0_20px_#f59e0b]"; ab.innerText = "CAUTION"; ab.className = "text-xs font-black px-5 py-2 rounded-2xl bg-amber-500/10 border border-amber-500/20 text-amber-400"; }
+            else { mb.className = "h-full bg-rose-500 shadow-[0_0_20px_#f43f5e]"; ab.innerText = "DANGER"; ab.className = "text-xs font-black px-5 py-2 rounded-2xl bg-rose-500/10 border border-rose-500/20 text-rose-400"; }
+
+            let mile = `${y} 年後的財富增長預測。`;
+            const ts = [100000, 250000, 500000, 1000000];
+            for (let i = 1; i <= y; i++) {
+                let v = principal * Math.pow(1 + (re / 100), i);
+                let hit = ts.find(t => v >= t && (principal * Math.pow(1 + (re / 100), i-1)) < t);
+                if (hit) { mile = `🚀 目標突破: $${hit/10000} 萬美金將於第 ${i} 年達成！`; break; }
+            }
+            document.getElementById('milestone').innerHTML = mile;
 
             const lbls = [], dta = [];
             for (let i = 0; i <= y; i++) { lbls.push(`Y${i}`); dta.push(principal * Math.pow(1 + (re / 100), i)); }
             if (myChart) myChart.destroy();
             const ctx = document.getElementById('growthChart').getContext('2d');
-            let grad = ctx.createLinearGradient(0,0,0,150); grad.addColorStop(0, 'rgba(16, 185, 129, 0.2)'); grad.addColorStop(1, 'transparent');
-            myChart = new Chart(ctx, { type: 'line', data: { labels: lbls, datasets: [{ data: dta, borderColor: '#10b981', backgroundColor: grad, fill: true, tension: 0.4, borderWidth: 2, pointRadius: 0 }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { display: false }, x: { grid: { display: false }, ticks: { color: '#475569', font: {size: 8} } } } } });
+            let grad = ctx.createLinearGradient(0,0,0,200); grad.addColorStop(0, 'rgba(16, 185, 129, 0.3)'); grad.addColorStop(1, 'transparent');
+            myChart = new Chart(ctx, { type: 'line', data: { labels: lbls, datasets: [{ data: dta, borderColor: '#10b981', backgroundColor: grad, fill: true, tension: 0.4, borderWidth: 3, pointRadius: 0 }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { display: false }, x: { grid: { display: false }, ticks: { color: '#475569', font: {size: 10, weight: 'bold'} } } } } });
         }
 
-        function hideKeyboard() { if (document.activeElement?.tagName === 'INPUT') document.activeElement.blur(); }
-        function uiInteract() { hideKeyboard(); if (navigator.vibrate) navigator.vibrate(12); }
-
         window.onload = () => {
-            const d = JSON.parse(localStorage.getItem('winner_v7')) || {c: 48, p: 77, s: 1602, fx: 31.4, q: 25660};
-            document.getElementById('cost_price').value = d.c; document.getElementById('current_price').value = d.p;
+            const d = JSON.parse(localStorage.getItem('winner_v8')) || {c: 48, cur: 77, s: 1602, fx: 31.4, q: 25660};
+            document.getElementById('cost_price').value = d.c; document.getElementById('current_price').value = d.cur;
             document.getElementById('shares').value = d.s; document.getElementById('fx_rate').value = d.fx;
             document.getElementById('qqq_now').value = d.q;
             calculate();
@@ -273,3 +278,4 @@
     </script>
 </body>
 </html>
+
