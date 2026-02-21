@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>WinnerFlow | 旗艦穩定版</title>
+    <title>WinnerFlow | 終極穩定版</title>
     
     <link rel="manifest" href="manifest.json">
     <meta name="apple-mobile-web-app-capable" content="yes">
@@ -16,249 +16,235 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     
     <style>
-        body { background-color: #000; color: #E2E8F0; font-family: system-ui, -apple-system, sans-serif; -webkit-tap-highlight-color: transparent; }
-        .glass-card { background: rgba(15, 23, 42, 0.85); backdrop-filter: blur(20px); border: 1px solid rgba(255, 255, 255, 0.05); }
+        body { background-color: #000; color: #E2E8F0; font-family: system-ui, sans-serif; -webkit-tap-highlight-color: transparent; }
+        .glass-card { background: rgba(15, 23, 42, 0.9); backdrop-filter: blur(20px); border: 1px solid rgba(255, 255, 255, 0.05); }
         .input-box { background: #0f172a; border: 1px solid #1e293b; color: #fff; text-align: center; border-radius: 12px; outline: none; width: 100%; padding: 12px; font-weight: 900; }
-        .input-box:focus { border-color: #10b981; box-shadow: 0 0 10px rgba(16, 185, 129, 0.2); }
+        .input-box:focus { border-color: #10b981; }
         input[type=range] { -webkit-appearance: none; background: transparent; height: 30px; }
         input[type=range]::-webkit-slider-runnable-track { background: #1e293b; height: 6px; border-radius: 3px; }
-        input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; height: 20px; width: 20px; border-radius: 50%; background: #10b981; margin-top: -7px; box-shadow: 0 0 15px rgba(16, 185, 129, 0.4); }
-        .neon-glow { text-shadow: 0 0 10px rgba(16, 185, 129, 0.6); }
+        input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; height: 20px; width: 20px; border-radius: 50%; background: #10b981; margin-top: -7px; box-shadow: 0 0 10px rgba(16, 185, 129, 0.5); }
+        #install-banner { display: none; transform: translateY(-100%); transition: transform 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+        #install-banner.show { display: block; transform: translateY(0); }
     </style>
 </head>
 
-<body class="min-h-screen flex flex-col items-center pb-10">
+<body class="min-h-screen flex flex-col items-center">
+
+    <div id="install-banner" class="w-full fixed top-0 z-[100] p-4">
+        <div class="max-w-xl mx-auto bg-indigo-600 rounded-2xl shadow-2xl p-4 flex justify-between items-center text-white border border-white/20">
+            <div class="flex items-center gap-3">
+                <img src="icon.png" class="w-10 h-10 rounded-lg">
+                <p class="font-black text-sm">安裝 WinnerFlow</p>
+            </div>
+            <button id="install-btn" class="bg-white text-indigo-700 px-4 py-1.5 rounded-lg font-bold text-xs">安裝</button>
+            <button onclick="dismissInstall()" class="ml-2 opacity-50 text-xs">✕</button>
+        </div>
+    </div>
 
     <div class="w-full max-w-5xl px-4 py-8 space-y-6">
         
         <div class="flex justify-between items-center">
             <div class="flex items-center gap-3">
-                <img src="icon.png" class="w-12 h-12 rounded-xl border border-emerald-500/20">
+                <img src="icon.png" class="w-12 h-12 rounded-xl shadow-lg shadow-emerald-500/10 border border-white/10">
                 <div>
                     <h1 class="text-xl font-black text-white italic tracking-tighter">WINNER<span class="text-emerald-500">FLOW</span></h1>
-                    <p id="last_sync" class="text-[9px] text-slate-500 font-bold uppercase tracking-widest">尚未同步數據</p>
+                    <p id="sync_status" class="text-[9px] text-slate-500 font-bold tracking-widest uppercase">等待同步中...</p>
                 </div>
             </div>
-            <button onclick="fetchMarketData()" class="bg-slate-900 border border-slate-700 text-emerald-400 px-5 py-2.5 rounded-xl font-black text-[10px] tracking-widest hover:bg-slate-800 transition-all flex items-center gap-2 active:scale-90">
-                <i id="f-icon" class="fa-solid fa-satellite-dish"></i> <span id="f-text">SYNC DATA</span>
+            <button onclick="fetchMarketData()" class="bg-slate-900 border border-slate-700 text-emerald-400 px-6 py-3 rounded-2xl font-black text-xs tracking-widest active:scale-90 transition-all">
+                <i id="f-icon" class="fa-solid fa-satellite-dish"></i> <span id="f-text">SYNC</span>
             </button>
         </div>
 
         <div class="lg:flex gap-6 space-y-6 lg:space-y-0">
             <div class="lg:w-5/12 space-y-4">
-                <div class="glass-card rounded-[2rem] p-6 space-y-6">
+                <div class="glass-card rounded-[2rem] p-6 space-y-6 border-emerald-500/20">
                     <div class="grid grid-cols-2 gap-4">
-                        <div class="space-y-1.5">
-                            <label class="text-[10px] font-black text-slate-500 uppercase block text-center">買進均價</label>
-                            <input type="number" id="cost_price" class="input-box text-lg" oninput="calculate()">
-                        </div>
-                        <div class="space-y-1.5 relative">
-                            <label class="text-[10px] font-black text-slate-500 uppercase block text-center">目前市價</label>
-                            <input type="number" id="current_price" class="input-box text-lg text-emerald-400 neon-glow" oninput="calculate()">
-                            <span id="roi_badge" class="absolute -bottom-2 left-1/2 -translate-x-1/2 text-[8px] font-black px-2 py-0.5 rounded-full border border-slate-700 bg-black shadow-xl">--%</span>
-                        </div>
-                        <div class="space-y-1.5">
-                            <label class="text-[10px] font-black text-slate-500 uppercase block text-center">持有股數</label>
-                            <input type="number" id="shares" class="input-box text-lg" oninput="calculate()">
-                        </div>
-                        <div class="space-y-1.5">
-                            <label class="text-[10px] font-black text-slate-500 uppercase block text-center">即時匯率</label>
-                            <input type="number" id="fx_rate" class="input-box text-lg text-indigo-400" oninput="calculate()">
-                        </div>
+                        <div class="space-y-1"><label class="text-[9px] font-black text-slate-500 block text-center uppercase">買進均價</label><input type="number" id="cost_price" class="input-box" oninput="calculate()"></div>
+                        <div class="space-y-1 relative"><label class="text-[9px] font-black text-slate-500 block text-center uppercase">目前市價</label><input type="number" id="current_price" class="input-box text-emerald-400" oninput="calculate()"><span id="roi_badge" class="absolute -bottom-2 left-1/2 -translate-x-1/2 text-[8px] font-black px-2 py-0.5 rounded-full bg-black border border-slate-700">--%</span></div>
+                        <div class="space-y-1"><label class="text-[9px] font-black text-slate-500 block text-center uppercase">持有股數</label><input type="number" id="shares" class="input-box" oninput="calculate()"></div>
+                        <div class="space-y-1"><label class="text-[9px] font-black text-slate-500 block text-center uppercase">即時匯率</label><input type="number" id="fx_rate" class="input-box text-indigo-400" oninput="calculate()"></div>
                     </div>
-
-                    <div class="bg-slate-900/60 p-5 rounded-2xl border border-indigo-500/10">
-                        <label class="text-[9px] font-black text-indigo-400 tracking-widest uppercase block mb-2 text-center">QQQ 現有資產 (USD)</label>
-                        <input type="number" id="qqq_now" class="w-full bg-transparent border-none text-white text-3xl font-black text-center outline-none focus:ring-0" oninput="calculate()">
+                    <div class="bg-slate-900/60 p-4 rounded-xl border border-indigo-900/10">
+                        <label class="text-[9px] font-black text-indigo-400 block mb-1 text-center uppercase">QQQ 美金庫存</label>
+                        <input type="number" id="qqq_now" class="w-full bg-transparent border-none text-white text-3xl font-black text-center focus:ring-0" oninput="calculate()">
                     </div>
-
-                    <div class="space-y-5" ontouchstart="hideKeyboard()">
-                        <div class="px-2">
-                            <div class="flex justify-between text-[10px] font-black text-slate-500 mb-2 uppercase">
-                                <span>獲利導流比例</span> <span class="text-emerald-500"><span id="ratio_val">25</span>%</span>
-                            </div>
-                            <input type="range" id="transfer_ratio" min="0" max="100" value="25" class="w-full" oninput="uiInteract(); calculate()">
-                        </div>
-                        <div class="grid grid-cols-2 gap-6 px-2">
-                            <div>
-                                <label class="text-[9px] font-black text-slate-500 mb-1 block uppercase">年化 (<span id="ret_val">11</span>%)</label>
-                                <input type="range" id="expected_return" min="1" max="25" value="11" oninput="uiInteract(); calculate()">
-                            </div>
-                            <div>
-                                <label class="text-[9px] font-black text-slate-500 mb-1 block uppercase">年限 (<span id="yrs_val">5</span>年)</label>
-                                <input type="range" id="years" min="1" max="30" value="5" oninput="uiInteract(); calculate()">
-                            </div>
+                    <div class="space-y-6" ontouchstart="hideKeyboard()">
+                        <div><div class="flex justify-between text-[10px] font-black text-slate-500 mb-2"><span>導流比例</span> <span class="text-emerald-500"><span id="ratio_val">25</span>%</span></div><input type="range" id="transfer_ratio" min="0" max="100" value="25" class="w-full" oninput="uiInteract(); calculate()"></div>
+                        <div class="grid grid-cols-2 gap-4">
+                            <div><label class="text-[9px] font-black text-slate-500 mb-1 block uppercase">年化 (<span id="ret_val">11</span>%)</label><input type="range" id="expected_return" min="1" max="25" value="11" oninput="uiInteract(); calculate()"></div>
+                            <div><label class="text-[9px] font-black text-slate-500 mb-1 block uppercase">年限 (<span id="yrs_val">5</span>年)</label><input type="range" id="years" min="1" max="30" value="5" oninput="uiInteract(); calculate()"></div>
                         </div>
                     </div>
                 </div>
             </div>
 
             <div class="lg:w-7/12 space-y-4" ontouchstart="hideKeyboard()">
-                <div class="glass-card rounded-[2rem] p-6 flex flex-col h-full">
-                    <div class="flex justify-between items-start mb-6">
-                        <div>
-                            <span class="text-[9px] font-black text-slate-500 uppercase tracking-widest italic">Price Margin</span>
-                            <div id="out_margin_text" class="text-4xl font-black text-white mt-1 neon-glow">--</div>
-                        </div>
-                        <div id="alert_status" class="text-[9px] font-bold px-3 py-1.5 rounded-lg bg-slate-900 border border-slate-800 text-slate-500 uppercase tracking-widest">系統待命</div>
+                <div class="glass-card rounded-[2rem] p-6 space-y-6">
+                    <div class="flex justify-between items-end">
+                        <div><span class="text-[9px] font-black text-slate-500 tracking-widest italic uppercase">Safety Margin</span><div id="out_margin_text" class="text-4xl font-black text-white mt-1">--</div></div>
+                        <div id="alert_box" class="text-[9px] font-bold px-3 py-1.5 rounded-lg bg-slate-900 border border-slate-800 text-slate-500 uppercase">STANDBY</div>
                     </div>
-
-                    <div class="w-full bg-slate-900 h-1.5 rounded-full mb-8 overflow-hidden">
-                        <div id="margin_bar" class="h-full transition-all duration-1000 ease-out" style="width: 0%"></div>
+                    <div class="w-full bg-slate-900 h-1 rounded-full overflow-hidden"><div id="margin_bar" class="h-full transition-all duration-1000" style="width: 0%"></div></div>
+                    <div class="grid grid-cols-2 gap-4">
+                        <div class="bg-emerald-500/5 p-4 rounded-xl border border-emerald-500/10 text-center"><span class="text-[8px] font-bold text-emerald-500/60 block mb-1 uppercase">本季導流</span><span id="out_transfer" class="text-xl font-black text-emerald-400">--</span></div>
+                        <div class="bg-white/5 p-4 rounded-xl border border-white/5 text-center"><span class="text-[8px] font-bold text-slate-500 block mb-1 uppercase">預估資產</span><span id="out_future" class="text-xl font-black text-white">--</span></div>
                     </div>
-
-                    <div class="grid grid-cols-2 gap-4 mb-6">
-                        <div class="bg-emerald-500/5 p-4 rounded-2xl border border-emerald-500/10">
-                            <span class="text-[8px] font-bold text-emerald-500/60 uppercase tracking-widest block mb-1">本季預估導流</span>
-                            <span id="out_transfer" class="text-xl font-black text-emerald-400">--</span>
-                        </div>
-                        <div class="bg-white/5 p-4 rounded-2xl border border-white/5">
-                            <span class="text-[8px] font-bold text-slate-500 uppercase tracking-widest block mb-1">未來預估資產</span>
-                            <span id="out_future" class="text-xl font-black text-white">--</span>
-                        </div>
-                    </div>
-
-                    <div class="flex-grow min-h-[180px] mb-4">
-                        <canvas id="growthChart"></canvas>
-                    </div>
-
-                    <div id="milestone" class="text-[9px] font-bold text-center py-3 px-4 rounded-xl bg-indigo-500/5 border border-indigo-500/10 text-indigo-400 uppercase tracking-widest">
-                        數據計算中...
-                    </div>
+                    <div class="h-44 w-full"><canvas id="growthChart"></canvas></div>
+                    <div id="milestone" class="text-[9px] font-bold text-center py-2 px-4 rounded-lg bg-indigo-500/5 text-indigo-400 uppercase tracking-widest border border-indigo-500/10 italic">計算中...</div>
                 </div>
             </div>
         </div>
     </div>
 
     <script>
-        let myChart = null;
+        let myChart = null, deferredPrompt = null;
 
-        // PWA 註冊
-        if ('serviceWorker' in navigator) navigator.serviceWorker.register('./sw.js');
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('./sw.js').then(reg => {
+                reg.onupdatefound = () => {
+                    const installingWorker = reg.installing;
+                    installingWorker.onstatechange = () => {
+                        if (installingWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                            window.location.reload(); // 偵測到新版本直接自動重整
+                        }
+                    };
+                };
+            });
+        }
 
-        function fmt(n, p = '') { return p + parseFloat(n).toLocaleString('en-US', {maximumFractionDigits: 0}); }
-        function hideKeyboard() { if (document.activeElement?.tagName === 'INPUT') document.activeElement.blur(); }
-        function uiInteract() { hideKeyboard(); if (navigator.vibrate) navigator.vibrate(10); }
+        // 超時控制 Fetch：5秒內沒回應就報錯
+        async function fetchWithTimeout(resource, options = {}) {
+            const { timeout = 5000 } = options;
+            const controller = new AbortController();
+            const id = setTimeout(() => controller.abort(), timeout);
+            const response = await fetch(resource, { ...options, signal: controller.signal });
+            clearTimeout(id);
+            return response;
+        }
 
-        // --- 核心同步邏輯 (多重備援) ---
         async function fetchMarketData() {
             uiInteract();
-            const bT = document.getElementById('f-text'), bI = document.getElementById('f-icon'), syncT = document.getElementById('last_sync');
-            bT.innerText = "SYNCING..."; bI.className = "fa-solid fa-circle-notch fa-spin";
+            const bT = document.getElementById('f-text'), bI = document.getElementById('f-icon'), sS = document.getElementById('sync_status');
+            bT.innerText = "BUSY"; bI.className = "fa-solid fa-circle-notch fa-spin";
             
             let fx = null, stk = null;
 
-            // 1. 抓取匯率 (多備援)
-            try {
-                const r = await fetch('https://open.er-api.com/v6/latest/USD');
-                const d = await r.json(); fx = d.rates.TWD;
-            } catch(e) {
+            // 匯率多重備援
+            const fxSources = [
+                'https://open.er-api.com/v6/latest/USD',
+                'https://cdn.jsdelivr.net/npm/@fawazahmed0/currency-api@latest/v1/currencies/usd.json',
+                'https://api.frankfurter.app/latest?from=USD&to=TWD'
+            ];
+            for(let url of fxSources) {
                 try {
-                    const r = await fetch('https://cdn.jsdelivr.net/npm/@fawazahmed0/currency-api@latest/v1/currencies/usd.json');
-                    const d = await r.json(); fx = d.usd.twd;
-                } catch(e2) {}
-            }
-
-            // 2. 抓取股價 (TWSE 官方 + 備援 Proxy)
-            try {
-                const r = await fetch('https://openapi.twse.com.tw/v1/exchangeReport/STOCK_DAY_ALL');
-                const d = await r.json();
-                const s = d.find(x => x.Code === "0050");
-                stk = parseFloat(s.ClosingPrice);
-            } catch(e) {
-                try {
-                    const u = encodeURIComponent('https://query1.finance.yahoo.com/v8/finance/chart/0050.TW');
-                    const r = await fetch(`https://api.allorigins.win/raw?url=${u}`);
+                    const r = await fetchWithTimeout(url);
                     const d = await r.json();
-                    stk = d.chart.result[0].meta.regularMarketPrice;
-                } catch(e2) {}
+                    fx = d.rates?.TWD || d.usd?.twd || d.rates?.TWD;
+                    if(fx) break;
+                } catch(e) { console.warn("匯率來源跳轉..."); }
             }
 
-            // 更新結果
+            // 股價多重備援
+            const stkSources = [
+                'https://openapi.twse.com.tw/v1/exchangeReport/STOCK_DAY_ALL', // 證交所
+                `https://api.allorigins.win/raw?url=${encodeURIComponent('https://query1.finance.yahoo.com/v8/finance/chart/0050.TW')}`, // Yahoo
+                'https://api.finmindtrade.com/api/v4/data?dataset=TaiwanStockPrice&data_id=0050' // FinMind
+            ];
+            for(let url of stkSources) {
+                try {
+                    const r = await fetchWithTimeout(url);
+                    const d = await r.json();
+                    // 根據不同 API 結構解析
+                    if(Array.isArray(d)) stk = parseFloat(d.find(x => x.Code === "0050")?.ClosingPrice);
+                    else if(d.chart) stk = d.chart.result[0].meta.regularMarketPrice;
+                    else if(d.data) stk = d.data[d.data.length - 1].close;
+                    if(stk) break;
+                } catch(e) { console.warn("股價來源跳轉..."); }
+            }
+
             if (fx) document.getElementById('fx_rate').value = fx.toFixed(2);
             if (stk) document.getElementById('current_price').value = stk;
             
             if (fx || stk) {
                 calculate();
                 bI.className = "fa-solid fa-check text-emerald-500";
-                bT.innerText = "SUCCESS";
-                const now = new Date();
-                syncT.innerText = `最後同步: ${now.getHours()}:${now.getMinutes().toString().padStart(2,'0')}:${now.getSeconds().toString().padStart(2,'0')}`;
-                syncT.className = "text-[9px] text-emerald-500 font-bold uppercase tracking-widest";
+                bT.innerText = "DONE";
+                const n = new Date();
+                sS.innerText = `SYNCED AT ${n.getHours()}:${n.getMinutes().toString().padStart(2,'0')}`;
+                sS.className = "text-[9px] text-emerald-500 font-black tracking-widest uppercase";
             } else {
-                bI.className = "fa-solid fa-xmark text-rose-500";
-                bT.innerText = "FAILED";
+                bI.className = "fa-solid fa-triangle-exclamation text-rose-500";
+                bT.innerText = "FAIL";
+                sS.innerText = "SYNC FAILED";
             }
-
-            setTimeout(() => { bI.className = "fa-solid fa-satellite-dish"; bT.innerText = "SYNC DATA"; }, 3000);
+            setTimeout(() => { bI.className = "fa-solid fa-satellite-dish"; bT.innerText = "SYNC"; }, 3000);
         }
 
         function calculate() {
             const c = parseFloat(document.getElementById('cost_price').value) || 0;
             const s = parseFloat(document.getElementById('shares').value) || 0;
-            const cur = parseFloat(document.getElementById('current_price').value) || 0;
-            const fx = parseFloat(document.getElementById('fx_rate').value) || 1;
+            const p = parseFloat(document.getElementById('current_price').value) || 0;
+            const fx= parseFloat(document.getElementById('fx_rate').value) || 1;
             const q = parseFloat(document.getElementById('qqq_now').value) || 0;
-            const rat = parseFloat(document.getElementById('transfer_ratio').value) || 0;
-            const ret = parseFloat(document.getElementById('expected_return').value) || 0;
-            const yrs = parseInt(document.getElementById('years').value) || 0;
+            const r = parseFloat(document.getElementById('transfer_ratio').value) || 0;
+            const re= parseFloat(document.getElementById('expected_return').value) || 0;
+            const y = parseInt(document.getElementById('years').value) || 0;
 
-            document.getElementById('ratio_val').innerText = rat;
-            document.getElementById('ret_val').innerText = ret;
-            document.getElementById('yrs_val').innerText = yrs;
+            document.getElementById('ratio_val').innerText = r;
+            document.getElementById('ret_val').innerText = re;
+            document.getElementById('yrs_val').innerText = y;
 
-            localStorage.setItem('winner_v3', JSON.stringify({c, s, cur, fx, q}));
+            localStorage.setItem('wf_v4', JSON.stringify({c, s, p, fx, q}));
 
-            const profit = (cur - c) * s;
-            const margin = cur > 0 ? (cur - c) / cur : 0;
-            const roi = c > 0 ? ((cur - c) / c) * 100 : 0;
-            const netUsd = Math.max(0, (profit * (rat / 100)) - (profit * (rat / 100) * 0.004425 + 850)) / fx;
-            const principal = q + (margin > 0.1 ? netUsd : 0);
-            const future = principal * Math.pow(1 + (ret / 100), yrs);
+            const profit = (p - c) * s;
+            const margin = p > 0 ? (p - c) / p : 0;
+            const roi = c > 0 ? ((p - c) / c) * 100 : 0;
+            const netUsd = Math.max(0, (profit * (r / 100)) - (profit * (r / 100) * 0.0045 + 850)) / fx;
+            const future = (q + (margin > 0.1 ? netUsd : 0)) * Math.pow(1 + (re / 100), y);
 
-            // UI
             document.getElementById('out_margin_text').innerText = (margin * 100).toFixed(2) + '%';
-            document.getElementById('out_transfer').innerText = '$ ' + netUsd.toLocaleString(undefined, {maximumFractionDigits: 0});
-            document.getElementById('out_future').innerText = '$ ' + future.toLocaleString(undefined, {maximumFractionDigits: 0});
+            document.getElementById('out_transfer').innerText = '$' + netUsd.toLocaleString(undefined, {maximumFractionDigits: 0});
+            document.getElementById('out_future').innerText = '$' + future.toLocaleString(undefined, {maximumFractionDigits: 0});
 
-            const roiB = document.getElementById('roi_badge');
-            roiB.innerText = (roi >= 0 ? '+' : '') + roi.toFixed(1) + '%';
-            roiB.className = `absolute -bottom-2 left-1/2 -translate-x-1/2 text-[8px] font-black px-2 py-0.5 rounded-full border border-slate-700 bg-black shadow-xl ${roi >= 0 ? 'text-emerald-500' : 'text-rose-500'}`;
+            const rb = document.getElementById('roi_badge');
+            rb.innerText = (roi >= 0 ? '+' : '') + roi.toFixed(1) + '%';
+            rb.className = `absolute -bottom-2 left-1/2 -translate-x-1/2 text-[8px] font-black px-2 py-0.5 rounded-full border border-slate-700 bg-black ${roi >= 0 ? 'text-emerald-500' : 'text-rose-500'}`;
 
-            const mb = document.getElementById('margin_bar'), ast = document.getElementById('alert_status');
+            const mb = document.getElementById('margin_bar'), ab = document.getElementById('alert_box');
             mb.style.width = Math.min(100, Math.max(0, margin * 200)) + '%';
-            if (margin >= 0.2) { mb.className = "h-full bg-emerald-500 shadow-[0_0_15px_#10b981]"; ast.innerText = "SAFE"; ast.className = "text-[9px] font-bold px-3 py-1.5 rounded-lg bg-emerald-500/10 border border-emerald-500/30 text-emerald-500 uppercase tracking-widest"; }
-            else if (margin >= 0.1) { mb.className = "h-full bg-amber-500 shadow-[0_0_15px_#f59e0b]"; ast.innerText = "WARNING"; ast.className = "text-[9px] font-bold px-3 py-1.5 rounded-lg bg-amber-500/10 border border-amber-500/30 text-amber-500 uppercase tracking-widest"; }
-            else { mb.className = "h-full bg-rose-500 shadow-[0_0_15px_#f43f5e]"; ast.innerText = "DANGER"; ast.className = "text-[9px] font-bold px-3 py-1.5 rounded-lg bg-rose-500/10 border border-rose-500/30 text-rose-500 uppercase tracking-widest"; }
+            if (margin >= 0.2) { mb.className = "h-full bg-emerald-500"; ab.innerText = "SAFE"; ab.className = "text-[9px] font-bold px-3 py-1 bg-emerald-500/10 text-emerald-500 rounded-lg"; }
+            else if (margin >= 0.1) { mb.className = "h-full bg-amber-500"; ab.innerText = "WARN"; ab.className = "text-[9px] font-bold px-3 py-1 bg-amber-500/10 text-amber-500 rounded-lg"; }
+            else { mb.className = "h-full bg-rose-500"; ab.innerText = "STOP"; ab.className = "text-[9px] font-bold px-3 py-1 bg-rose-500/10 text-rose-500 rounded-lg"; }
 
-            // 里程碑
-            let milestone = `${yrs} 年後財富增長預估。`;
-            const targets = [100000, 250000, 500000, 1000000];
-            for (let i = 1; i <= yrs; i++) {
-                let v = principal * Math.pow(1 + (ret / 100), i);
-                let hit = targets.find(t => v >= t && (principal * Math.pow(1 + (ret / 100), i-1)) < t);
-                if (hit) { milestone = `🚀 目標突破: $${hit/10000} 萬美金預計在第 ${i} 年達成！`; break; }
+            let ms = `分析中...`;
+            const ts = [100000, 250000, 500000, 1000000];
+            for (let i = 1; i <= y; i++) {
+                let v = (q + (margin > 0.1 ? netUsd : 0)) * Math.pow(1 + (re / 100), i);
+                let hit = ts.find(t => v >= t && ((q + (margin > 0.1 ? netUsd : 0)) * Math.pow(1 + (re / 100), i-1)) < t);
+                if (hit) { ms = `🚀 第 ${i} 年突破 $${hit/10000} 萬美金里程碑`; break; }
             }
-            document.getElementById('milestone').innerHTML = milestone;
+            document.getElementById('milestone').innerText = ms;
 
-            // 圖表
             const lbls = [], dta = [];
-            for (let i = 0; i <= yrs; i++) { lbls.push(`Y${i}`); dta.push(principal * Math.pow(1 + (ret / 100), i)); }
+            for (let i = 0; i <= y; i++) { lbls.push(`Y${i}`); dta.push((q + (margin > 0.1 ? netUsd : 0)) * Math.pow(1 + (re / 100), i)); }
             if (myChart) myChart.destroy();
             const ctx = document.getElementById('growthChart').getContext('2d');
             let grad = ctx.createLinearGradient(0,0,0,200); grad.addColorStop(0, 'rgba(16, 185, 129, 0.2)'); grad.addColorStop(1, 'transparent');
             myChart = new Chart(ctx, { type: 'line', data: { labels: lbls, datasets: [{ data: dta, borderColor: '#10b981', backgroundColor: grad, fill: true, tension: 0.4, borderWidth: 2, pointRadius: 0 }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { display: false }, x: { grid: { display: false }, ticks: { color: '#475569', font: {size: 8} } } } } });
         }
 
+        function hideKeyboard() { if (document.activeElement?.tagName === 'INPUT') document.activeElement.blur(); }
+        function uiInteract() { hideKeyboard(); if (navigator.vibrate) navigator.vibrate(10); }
+
         window.onload = () => {
-            const d = JSON.parse(localStorage.getItem('winner_v3')) || {c: 48, s: 1602, cur: 77, fx: 31.4, q: 25660};
-            document.getElementById('cost_price').value = d.c;
-            document.getElementById('current_price').value = d.cur;
-            document.getElementById('shares').value = d.s;
-            document.getElementById('fx_rate').value = d.fx;
+            const d = JSON.parse(localStorage.getItem('wf_v4')) || {c: 48, s: 1602, p: 77, fx: 31.4, q: 25660};
+            document.getElementById('cost_price').value = d.c; document.getElementById('current_price').value = d.p;
+            document.getElementById('shares').value = d.s; document.getElementById('fx_rate').value = d.fx;
             document.getElementById('qqq_now').value = d.q;
             calculate();
         };
     </script>
 </body>
 </html>
+
