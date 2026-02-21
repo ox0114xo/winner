@@ -4,25 +4,31 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>WinnerFlow | 贏家極光版</title>
+    
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
     <style>
-        /* 深色模式專屬質感設定 */
+        /* === 核心視覺樣式設定 === */
         body { background-color: #0B0F19; color: #E2E8F0; }
         .glass-panel { background: rgba(30, 41, 59, 0.7); backdrop-filter: blur(16px); border: 1px solid rgba(255, 255, 255, 0.08); }
-        .input-dark { background: #0f172a; border: 1px solid #334155; color: #f8fafc; }
+        .input-dark { background: #0f172a; border: 1px solid #334155; color: #f8fafc; transition: all 0.3s; }
         .input-dark:focus { border-color: #10b981; box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.2); outline: none; }
         
-        /* 霓虹滑桿 */
+        /* 隱藏數字輸入框的上下箭頭 */
+        input[type=number]::-webkit-inner-spin-button, input[type=number]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
+        
+        /* 霓虹特效 */
+        .neon-text { text-shadow: 0 0 15px currentColor; }
+        
+        /* 自訂滑桿外觀 */
         input[type=range] { -webkit-appearance: none; width: 100%; background: transparent; height: 6px; border-radius: 3px; cursor: pointer; }
         input[type=range]::-webkit-slider-runnable-track { background: #334155; height: 6px; border-radius: 3px; }
         input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; height: 20px; width: 20px; border-radius: 50%; background: #10b981; margin-top: -7px; box-shadow: 0 0 10px rgba(16, 185, 129, 0.5); }
-        
-        input[type=number]::-webkit-inner-spin-button, input[type=number]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
-        .neon-text { text-shadow: 0 0 15px currentColor; }
     </style>
 </head>
+
 <body class="font-sans p-4 md:p-8 min-h-screen flex justify-center items-start md:items-center selection:bg-emerald-500 selection:text-white">
 
     <div class="w-full max-w-6xl glass-panel rounded-3xl shadow-2xl overflow-hidden relative">
@@ -38,13 +44,13 @@
             </div>
             <button onclick="fetchMarketData()" class="mt-5 md:mt-0 bg-slate-800 hover:bg-slate-700 border border-slate-600 text-emerald-400 py-2.5 px-6 rounded-full font-bold transition-all flex items-center gap-2 active:scale-95 shadow-[0_0_15px_rgba(16,185,129,0.15)]">
                 <i id="fetch_icon" class="fa-solid fa-satellite-dish"></i>
-                <span id="fetch_text">同步全球時價</span>
+                <span id="fetch_text">同步官方時價</span>
             </button>
         </div>
 
         <div class="p-5 md:p-8 md:flex gap-8 lg:gap-12 relative z-10">
+            
             <div class="md:w-[45%] space-y-6">
-                
                 <div class="grid grid-cols-2 gap-4">
                     <div class="space-y-1">
                         <label class="text-[11px] font-bold text-slate-400 uppercase tracking-widest block">0050 買進均價</label>
@@ -53,7 +59,7 @@
                     <div class="space-y-1 relative">
                         <label class="text-[11px] font-bold text-slate-400 uppercase tracking-widest block">0050 目前市價</label>
                         <input type="number" id="current_price" class="w-full input-dark rounded-xl p-3 font-black text-xl text-emerald-400 text-center neon-text" oninput="calculate()">
-                        <span id="roi_badge" class="absolute bottom-3 right-3 text-[10px] font-black px-1.5 py-0.5 rounded bg-slate-800 text-emerald-400 border border-emerald-900">--%</span>
+                        <span id="roi_badge" class="absolute bottom-3 right-3 text-[10px] font-black px-1.5 py-0.5 rounded bg-slate-800 border border-slate-700">--%</span>
                     </div>
                     <div class="space-y-1">
                         <label class="text-[11px] font-bold text-slate-400 uppercase tracking-widest block">持有股數</label>
@@ -103,7 +109,7 @@
                         <span id="out_margin_text" class="text-2xl font-black text-white">--</span>
                     </div>
                     <div class="w-full bg-slate-900 rounded-full h-2 mb-4 overflow-hidden">
-                        <div id="margin_bar" class="h-full rounded-full transition-all duration-700 ease-out shadow-[0_0_10px_currentColor]" style="width: 0%;"></div>
+                        <div id="margin_bar" class="h-full rounded-full transition-all duration-700 ease-out" style="width: 0%;"></div>
                     </div>
                     <div id="alert_box" class="bg-slate-900/50 rounded-xl p-3 text-sm font-medium flex gap-3 items-start border border-slate-700/50">
                         </div>
@@ -120,7 +126,7 @@
                             <span>證交稅與手續費</span><span id="out_tax_broker" class="font-mono">--</span>
                         </div>
                         <div class="flex justify-between items-center text-slate-400">
-                            <span>跨國電匯費 (可改)</span>
+                            <span>跨國電匯費 (可修改)</span>
                             <div class="flex items-center gap-1">
                                 <span>NT$</span>
                                 <input type="number" id="wire_fee" value="800" class="w-14 bg-slate-800 border border-slate-600 text-white text-right rounded px-1 py-0.5 outline-none font-mono" oninput="calculate()">
@@ -151,67 +157,107 @@
     <script>
         let myChart = null;
 
+        // 工具函數：數字格式化 (加入千分位與貨幣符號)
         function fmtMny(num, pre = '') {
             return pre + parseFloat(num).toLocaleString('en-US', { maximumFractionDigits: 0 });
         }
 
-        // 隱藏手機鍵盤 (超重要防呆)
+        // 功能函數：隱藏手機虛擬鍵盤
         function hideKeyboard() {
             if (document.activeElement && document.activeElement.tagName === 'INPUT') {
                 document.activeElement.blur();
             }
         }
 
-        // 觸覺震動回饋 (專為手機使用者設計)
+        // 功能函數：震動回饋機制
         function uiInteract() {
-            hideKeyboard(); // 只要一動滑桿就收起鍵盤
-            if (navigator.vibrate) {
-                navigator.vibrate(10); // 短促而紮實的震動
-            }
+            hideKeyboard();
+            if (navigator.vibrate) { navigator.vibrate(10); } // 若裝置支援，給予10毫秒短震動
         }
 
+        // 功能函數：一鍵套用階梯式停利策略
         function autoStrategy() {
             uiInteract();
             const cst = parseFloat(document.getElementById('cost_price').value) || 0;
             const cur = parseFloat(document.getElementById('current_price').value) || 0;
             const mgn = cur > 0 ? (cur - cst) / cur : 0;
             let rec = 0;
+            
             if (mgn >= 0.3) rec = 40;
             else if (mgn >= 0.2) rec = 25;
             else if (mgn >= 0.1) rec = 15;
+            
             document.getElementById('transfer_ratio').value = rec;
             calculate();
         }
 
+        // 核心API抓取引擎：使用官方且防擋的資料來源
         async function fetchMarketData() {
             uiInteract();
-            const btnT = document.getElementById('fetch_text'), btnI = document.getElementById('fetch_icon');
-            btnT.innerText = "衛星連線中..."; btnI.className = "fa-solid fa-circle-notch fa-spin";
+            const btnT = document.getElementById('fetch_text');
+            const btnI = document.getElementById('fetch_icon');
+            
+            btnT.innerText = "資料同步中...";
+            btnI.className = "fa-solid fa-circle-notch fa-spin";
+            
             let fxOk = false, stkOk = false;
 
+            // 1. 抓取匯率：使用 ExchangeRate-API (穩定、免費、支援跨域)
             try {
-                const r = await fetch('https://cdn.jsdelivr.net/npm/@fawazahmed0/currency-api@latest/v1/currencies/usd.json');
+                const r = await fetch('https://open.er-api.com/v6/latest/USD');
                 const d = await r.json();
-                if(d.usd && d.usd.twd) { document.getElementById('fx_rate').value = d.usd.twd.toFixed(2); fxOk = true; }
-            } catch (e) {}
+                if (d && d.rates && d.rates.TWD) { 
+                    document.getElementById('fx_rate').value = d.rates.TWD.toFixed(2); 
+                    fxOk = true; 
+                }
+            } catch (e) { console.error("匯率同步失敗:", e); }
 
+            // 2. 抓取 0050 市價：使用台灣證交所 OpenAPI (官方來源，100%不被阻擋)
             try {
-                const u = encodeURIComponent('https://query1.finance.yahoo.com/v8/finance/chart/0050.TW');
-                const r = await fetch(`https://api.allorigins.win/raw?url=${u}`);
+                const r = await fetch('https://openapi.twse.com.tw/v1/exchangeReport/STOCK_DAY_ALL');
                 const d = await r.json();
-                const p = d.chart.result[0].meta.regularMarketPrice;
-                if(p) { document.getElementById('current_price').value = p; stkOk = true; }
-            } catch (e) {}
+                const stock0050 = d.find(s => s.Code === "0050");
+                if (stock0050 && stock0050.ClosingPrice) { 
+                    document.getElementById('current_price').value = parseFloat(stock0050.ClosingPrice); 
+                    stkOk = true; 
+                }
+            } catch (e) { 
+                console.error("證交所股價同步失敗，嘗試備用方案", e); 
+                // 備用方案：如果證交所 API 維修，回退到 Yahoo Finance
+                try {
+                    const u = encodeURIComponent('https://query1.finance.yahoo.com/v8/finance/chart/0050.TW');
+                    const r2 = await fetch(`https://api.allorigins.win/raw?url=${u}`);
+                    const d2 = await r2.json();
+                    const p = d2.chart.result[0].meta.regularMarketPrice;
+                    if(p) { document.getElementById('current_price').value = p; stkOk = true; }
+                } catch (e2) { console.error("備用方案亦失敗", e2); }
+            }
 
+            // 抓取完畢後重新計算畫面數字
             calculate();
 
-            if(fxOk && stkOk) { btnI.className = "fa-solid fa-check text-emerald-400"; btnT.innerText = "時價已同步"; }
-            else { btnI.className = "fa-solid fa-xmark text-rose-400"; btnT.innerText = "連線異常"; }
+            // 顯示連線結果狀態
+            if (fxOk && stkOk) { 
+                btnI.className = "fa-solid fa-check text-emerald-400"; 
+                btnT.innerText = "時價已同步"; 
+            } else if (fxOk || stkOk) { 
+                btnI.className = "fa-solid fa-triangle-exclamation text-amber-400"; 
+                btnT.innerText = "部分連線成功"; 
+            } else { 
+                btnI.className = "fa-solid fa-xmark text-rose-400"; 
+                btnT.innerText = "連線異常，請手動輸入"; 
+            }
 
-            setTimeout(() => { btnI.className = "fa-solid fa-satellite-dish"; btnT.innerText = "同步全球時價"; }, 2500);
+            // 3秒後恢復按鈕初始狀態
+            setTimeout(() => { 
+                btnI.className = "fa-solid fa-satellite-dish"; 
+                btnT.innerText = "同步官方時價"; 
+            }, 3000);
         }
 
+        // 核心計算與畫面更新邏輯
         function calculate() {
+            // 取值
             const cst = parseFloat(document.getElementById('cost_price').value) || 0;
             const cur = parseFloat(document.getElementById('current_price').value) || 0;
             const shr = parseFloat(document.getElementById('shares').value) || 0;
@@ -222,18 +268,22 @@
             const ret = parseFloat(document.getElementById('expected_return').value) || 0;
             const yrs = parseInt(document.getElementById('years').value) || 0;
 
+            // 更新滑桿數字顯示
             document.getElementById('ratio_val').innerText = rat;
             document.getElementById('return_val').innerText = ret;
             document.getElementById('years_val').innerText = yrs;
 
+            // 存檔至瀏覽器 LocalStorage
             ['cost_price', 'current_price', 'shares', 'fx_rate', 'qqq_now', 'wire_fee'].forEach(k => localStorage.setItem('wf_'+k, document.getElementById(k).value));
 
+            // 計算利潤與護城河
             const pft = (cur - cst) * shr;
             const mgn = cur > 0 ? (cur - cst) / cur : 0;
             const roi = cst > 0 ? ((cur - cst) / cst) * 100 : 0; 
             
             const extractTwd = pft * (rat / 100);
             
+            // 扣除摩擦成本計算淨匯出額
             let taxF = 0, broF = 0, totF = 0, netTwd = 0, netUsd = 0;
             if (extractTwd > 0) {
                 taxF = extractTwd * 0.003;
@@ -243,10 +293,9 @@
                 netUsd = netTwd / fx;
             }
 
-            // 里程碑運算引擎
-            let ftr = qqq;
+            // 複利計算與里程碑推演
             let principal = qqq + (mgn > 0.1 ? netUsd : 0);
-            ftr = principal * Math.pow(1 + (ret / 100), yrs);
+            let ftr = principal * Math.pow(1 + (ret / 100), yrs);
 
             let milestoneStr = `持續佈局，${yrs} 年後將迎來豐厚果實。`;
             const targets = [50000, 100000, 250000, 500000, 1000000];
@@ -259,7 +308,7 @@
                 }
             }
 
-            // 畫面更新
+            // 渲染畫面文字
             const roiBadge = document.getElementById('roi_badge');
             roiBadge.innerText = (roi > 0 ? '+' : '') + roi.toFixed(1) + '%';
             roiBadge.className = `absolute bottom-3 right-3 text-[10px] font-black px-1.5 py-0.5 rounded border ${roi >= 0 ? 'bg-emerald-900/30 text-emerald-400 border-emerald-800' : 'bg-rose-900/30 text-rose-400 border-rose-800'}`;
@@ -270,6 +319,7 @@
             document.getElementById('out_future').innerText = fmtMny(ftr, '$ ');
             document.getElementById('milestone_text').innerHTML = milestoneStr;
 
+            // 護城河進度條與狀態指示
             const mT = document.getElementById('out_margin_text'), mB = document.getElementById('margin_bar');
             const ab = document.getElementById('alert_box');
             mT.innerText = (mgn * 100).toFixed(2) + '%';
@@ -279,29 +329,65 @@
                 mB.className="h-full rounded-full bg-emerald-500 shadow-[0_0_15px_#10b981]"; 
                 mT.className="text-2xl font-black text-emerald-400 neon-text"; 
                 ab.innerHTML="<div class='text-emerald-400 mt-0.5'><i class='fa-solid fa-robot'></i></div><div class='text-slate-300'>防護網極度安全。<span class='text-emerald-400 font-bold'>建議放行！</span> 已為您規劃最佳導流路徑。</div>"; 
-            }
-            else if (mgn >= 0.1) { 
+            } else if (mgn >= 0.1) { 
                 mB.className="h-full rounded-full bg-amber-500 shadow-[0_0_15px_#f59e0b]"; 
                 mT.className="text-2xl font-black text-amber-400"; 
                 ab.innerHTML="<div class='text-amber-400 mt-0.5'><i class='fa-solid fa-robot'></i></div><div class='text-slate-300'>護城河稍微縮水。您可以點擊<span class='text-amber-400'>「自動判定」</span>來幫您計算最保守的搬家比例。</div>"; 
-            }
-            else { 
+            } else { 
                 mB.className="h-full rounded-full bg-rose-500 shadow-[0_0_15px_#f43f5e]"; 
                 mT.className="text-2xl font-black text-rose-400"; 
                 ab.innerHTML="<div class='text-rose-400 mt-0.5'><i class='fa-solid fa-robot'></i></div><div class='text-slate-300'>偵測到利潤過低或虧損。<span class='text-rose-400 font-bold'>通道已關閉！</span> 建議先按兵不動，等待下一波行情。</div>"; 
             }
 
+            // 更新走勢圖
             const lbls = [], dta = [];
-            for (let i = 0; i <= yrs; i++) { lbls.push(`Y${i}`); dta.push(principal * Math.pow(1 + (ret / 100), i)); }
+            for (let i = 0; i <= yrs; i++) { 
+                lbls.push(`Y${i}`); 
+                dta.push(principal * Math.pow(1 + (ret / 100), i)); 
+            }
             if (myChart) myChart.destroy();
             const ctx = document.getElementById('growthChart').getContext('2d');
             let grad = ctx.createLinearGradient(0,0,0,200); 
-            grad.addColorStop(0, 'rgba(129, 140, 248, 0.3)'); grad.addColorStop(1, 'rgba(129, 140, 248, 0)');
+            grad.addColorStop(0, 'rgba(129, 140, 248, 0.3)'); 
+            grad.addColorStop(1, 'rgba(129, 140, 248, 0)');
             
             Chart.defaults.color = '#64748b';
             Chart.defaults.font.family = 'system-ui';
             
             myChart = new Chart(ctx, { 
                 type: 'line', 
-                data: { labels: lbls, datasets: [{ data: dta, borderColor: '#818cf8', backgroundColor: grad, fill: true, tension: 0.4, borderWidth: 2, pointBackgroundColor: '#0f172a', pointBorderColor: '#818cf8', pointBorderWidth: 2, pointRadius: 3 }] }, 
-                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false }, tooltip: { backgroundColor: 'rgba(15, 23, 42, 0.95)', titleColor: '#818cf8', padding: 10, borderColor: '#334155', borderWidth: 1, callbacks: { label: function(c) { return '$ ' + c.parsed.y.toLocaleString('en-US', {maximumFractionDigits:0}); } } } }, scales: { y: { grid: { color: '#1e293b' } }, x: { 
+                data: { 
+                    labels: lbls, 
+                    datasets: [{ 
+                        data: dta, borderColor: '#818cf8', backgroundColor: grad, 
+                        fill: true, tension: 0.4, borderWidth: 2, 
+                        pointBackgroundColor: '#0f172a', pointBorderColor: '#818cf8', 
+                        pointBorderWidth: 2, pointRadius: 3 
+                    }] 
+                }, 
+                options: { 
+                    responsive: true, maintainAspectRatio: false, 
+                    plugins: { 
+                        legend: { display: false }, 
+                        tooltip: { backgroundColor: 'rgba(15, 23, 42, 0.95)', titleColor: '#818cf8', padding: 10, borderColor: '#334155', borderWidth: 1, callbacks: { label: function(c) { return '$ ' + c.parsed.y.toLocaleString('en-US', {maximumFractionDigits:0}); } } } 
+                    }, 
+                    scales: { y: { grid: { color: '#1e293b' } }, x: { grid: { display: false } } }, 
+                    interaction: { intersect: false, mode: 'index' } 
+                } 
+            });
+        }
+
+        // 頁面載入時自動執行
+        window.onload = () => {
+            // 讀取歷史資料
+            const defs = { cost_price: 48, current_price: 77, shares: 1602, fx_rate: 31.4, qqq_now: 25660, wire_fee: 800 };
+            ['cost_price', 'current_price', 'shares', 'fx_rate', 'qqq_now', 'wire_fee'].forEach(k => { 
+                const s = localStorage.getItem('wf_'+k); 
+                document.getElementById(k).value = s !== null ? s : defs[k]; 
+            });
+            // 初始計算
+            calculate();
+        };
+    </script>
+</body>
+</html>
