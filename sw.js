@@ -1,4 +1,4 @@
-const CACHE_NAME = 'WinnerFlow-v5';
+const CACHE_NAME = 'WinnerFlow-v6';
 const ASSETS = ['./', './index.html', './manifest.json', './icon.png'];
 self.addEventListener('install', e => {
   self.skipWaiting();
