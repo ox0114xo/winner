@@ -18,6 +18,7 @@
     <style>
         body { background: #020617; color: #f8fafc; font-family: system-ui, sans-serif; -webkit-tap-highlight-color: transparent; overflow-x: hidden; }
         
+        /* 全息呼吸背景光效 */
         .ambient-light-1 { position: fixed; top: -10%; left: -10%; width: 50vw; height: 50vw; background: radial-gradient(circle, rgba(16,185,129,0.15) 0%, rgba(0,0,0,0) 70%); filter: blur(60px); animation: float 15s ease-in-out infinite alternate; z-index: -1; pointer-events: none; }
         .ambient-light-2 { position: fixed; bottom: -10%; right: -10%; width: 60vw; height: 60vw; background: radial-gradient(circle, rgba(99,102,241,0.15) 0%, rgba(0,0,0,0) 70%); filter: blur(60px); animation: float 20s ease-in-out infinite alternate-reverse; z-index: -1; pointer-events: none; }
         @keyframes float { 0% { transform: translate(0, 0) scale(1); } 100% { transform: translate(10%, 10%) scale(1.2); } }
@@ -76,26 +77,26 @@
                     <div class="grid grid-cols-2 gap-5">
                         <div class="space-y-2">
                             <label class="text-[11px] font-black text-slate-400 block text-center uppercase tracking-widest"><i class="fa-solid fa-hand-holding-dollar text-slate-500 mr-1"></i>0050 均價</label>
-                            <input type="number" id="cost_price" class="input-hero" oninput="calculate()">
+                            <input type="number" id="cost_price" value="48" class="input-hero" oninput="calculate()">
                         </div>
                         <div class="space-y-2 relative">
                             <label class="text-[11px] font-black text-slate-400 block text-center uppercase tracking-widest"><i class="fa-solid fa-arrow-trend-up text-emerald-500 mr-1"></i>0050 市價</label>
-                            <input type="number" id="current_price" class="input-hero text-emerald-400 text-glow" oninput="calculate()">
+                            <input type="number" id="current_price" value="77" class="input-hero text-emerald-400 text-glow" oninput="calculate()">
                             <span id="roi_badge" class="absolute -bottom-3 left-1/2 -translate-x-1/2 text-[10px] font-black px-3 py-1 rounded-full border border-slate-700 bg-slate-900 shadow-2xl z-10">--%</span>
                         </div>
                         <div class="space-y-2">
                             <label class="text-[11px] font-black text-slate-400 block text-center uppercase tracking-widest">持有股數</label>
-                            <input type="number" id="shares" class="input-hero" oninput="calculate()">
+                            <input type="number" id="shares" value="1602" class="input-hero" oninput="calculate()">
                         </div>
                         <div class="space-y-2">
                             <label class="text-[11px] font-black text-slate-400 block text-center uppercase tracking-widest">即時匯率</label>
-                            <input type="number" id="fx_rate" step="0.1" class="input-hero text-indigo-400" oninput="calculate()">
+                            <input type="number" id="fx_rate" value="31.4" step="0.1" class="input-hero text-indigo-400" oninput="calculate()">
                         </div>
                     </div>
 
                     <div class="bg-gradient-to-br from-indigo-900/40 to-slate-900/40 p-6 rounded-[2rem] border border-indigo-500/20 shadow-inner">
                         <label class="text-xs font-black text-indigo-300 block mb-2 text-center uppercase tracking-widest"><i class="fa-brands fa-usps mr-1"></i>QQQ 美金戰略儲備</label>
-                        <input type="number" id="qqq_now" class="w-full bg-transparent border-none text-white text-4xl font-black text-center focus:ring-0 outline-none" oninput="calculate()">
+                        <input type="number" id="qqq_now" value="25660" class="w-full bg-transparent border-none text-white text-4xl font-black text-center focus:ring-0 outline-none placeholder-slate-600" oninput="calculate()">
                     </div>
 
                     <div class="space-y-6 bg-slate-900/40 p-6 rounded-[2rem] border border-white/5" ontouchstart="hideKeyboard()">
@@ -163,139 +164,165 @@
     </div>
 
     <script>
-        let myChart = null, deferredPrompt = null;
+        var myChart = null;
+        var deferredPrompt = null;
 
-        if ('serviceWorker' in navigator) navigator.serviceWorker.register('./sw.js');
+        // PWA
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('./sw.js').catch(function(err){ console.log(err); });
+        }
 
-        const isIos = /iphone|ipad|ipod/.test(navigator.userAgent.toLowerCase());
-        const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone;
+        var isIos = /iphone|ipad|ipod/.test(navigator.userAgent.toLowerCase());
+        var isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone;
 
         if (!isStandalone) {
             if (isIos) {
                 document.getElementById('install-hint').innerText = "點擊分享按鈕 → 加入主畫面";
                 document.getElementById('install-btn').style.display = 'none';
-                setTimeout(() => document.getElementById('install-banner').classList.add('show'), 3000);
+                setTimeout(function() { document.getElementById('install-banner').classList.add('show'); }, 3000);
             } else {
-                window.addEventListener('beforeinstallprompt', (e) => {
-                    e.preventDefault(); deferredPrompt = e;
-                    setTimeout(() => document.getElementById('install-banner').classList.add('show'), 3000);
+                window.addEventListener('beforeinstallprompt', function(e) {
+                    e.preventDefault(); 
+                    deferredPrompt = e;
+                    setTimeout(function() { document.getElementById('install-banner').classList.add('show'); }, 3000);
                 });
             }
         }
 
-        document.getElementById('install-btn').addEventListener('click', async () => {
-            if (deferredPrompt) {
-                deferredPrompt.prompt();
-                const { outcome } = await deferredPrompt.userChoice;
-                if (outcome === 'accepted') dismissInstall();
-                deferredPrompt = null;
+        var btnInstall = document.getElementById('install-btn');
+        if(btnInstall) {
+            btnInstall.addEventListener('click', async function() {
+                if (deferredPrompt) {
+                    deferredPrompt.prompt();
+                    const choice = await deferredPrompt.userChoice;
+                    if (choice.outcome === 'accepted') dismissInstall();
+                    deferredPrompt = null;
+                }
+            });
+        }
+
+        function dismissInstall() { 
+            var banner = document.getElementById('install-banner');
+            if(banner) banner.classList.remove('show'); 
+        }
+
+        function fmt(n, p) { return (p || '') + parseFloat(n).toLocaleString('en-US', {maximumFractionDigits: 0}); }
+        
+        function hideKeyboard() { 
+            // 移除所有 ?. 寫法，保證舊手機相容
+            if (document.activeElement && document.activeElement.tagName === 'INPUT') {
+                document.activeElement.blur(); 
             }
-        });
-
-        function dismissInstall() { document.getElementById('install-banner').classList.remove('show'); }
-
-        function fmt(n, p = '') { return p + parseFloat(n).toLocaleString('en-US', {maximumFractionDigits: 0}); }
-        function hideKeyboard() { if (document.activeElement?.tagName === 'INPUT') document.activeElement.blur(); }
-        function uiInteract() { hideKeyboard(); if (navigator.vibrate) navigator.vibrate(15); }
+        }
+        
+        function uiInteract() { 
+            hideKeyboard(); 
+            if (navigator.vibrate) navigator.vibrate(15); 
+        }
 
         async function fetchMarketData() {
             uiInteract();
-            // 修正錯誤：加入安全防護，確保元素存在
-            const bT = document.getElementById('f-text');
-            const bI = document.getElementById('f-icon');
-            const status = document.getElementById('sync_status');
+            var bT = document.getElementById('f-text');
+            var bI = document.getElementById('f-icon');
+            var statusStr = document.getElementById('sync_status');
             
             if(bT) bT.innerText = "連線衛星中..."; 
             if(bI) bI.className = "fa-solid fa-satellite-dish fa-spin";
             
             let fx = null, stk = null;
-            try { const r = await fetch('https://open.er-api.com/v6/latest/USD'); const d = await r.json(); fx = d.rates.TWD; } catch(e){}
             try { 
-                const r = await fetch('https://openapi.twse.com.tw/v1/exchangeReport/STOCK_DAY_ALL'); const d = await r.json(); 
-                stk = parseFloat(d.find(x => x.Code === "0050")?.ClosingPrice); 
+                const r = await fetch('https://open.er-api.com/v6/latest/USD'); 
+                const d = await r.json(); 
+                if(d && d.rates) fx = d.rates.TWD; 
+            } catch(e){}
+            
+            try { 
+                const r = await fetch('https://openapi.twse.com.tw/v1/exchangeReport/STOCK_DAY_ALL'); 
+                const d = await r.json(); 
+                // 移除 ?. 寫法，改用傳統過濾
+                var targetStock = null;
+                for(var i=0; i<d.length; i++) {
+                    if(d[i].Code === "0050") { targetStock = d[i]; break; }
+                }
+                if(targetStock) stk = parseFloat(targetStock.ClosingPrice);
             } catch(e){}
 
-            if (fx) document.getElementById('fx_rate').value = fx.toFixed(2);
-            if (stk) document.getElementById('current_price').value = stk;
+            if (fx && document.getElementById('fx_rate')) document.getElementById('fx_rate').value = fx.toFixed(2);
+            if (stk && document.getElementById('current_price')) document.getElementById('current_price').value = stk;
             
             if (fx || stk) {
                 calculate();
                 if(bI) bI.className = "fa-solid fa-check text-emerald-400"; 
                 if(bT) bT.innerText = "全球同步完成";
-                const n = new Date(); 
-                if(status) {
-                    status.innerText = `最新快照: ${n.getHours()}:${n.getMinutes().toString().padStart(2,'0')}`;
-                    status.className = "text-[10px] font-bold text-emerald-400 uppercase tracking-widest mt-1";
+                var n = new Date(); 
+                if(statusStr) {
+                    var hrs = n.getHours();
+                    var mins = n.getMinutes().toString().padStart(2,'0');
+                    statusStr.innerText = "最新快照: " + hrs + ":" + mins;
+                    statusStr.className = "text-[10px] font-bold text-emerald-400 uppercase tracking-widest mt-1";
                 }
             } else {
                 if(bI) bI.className = "fa-solid fa-xmark text-rose-500"; 
                 if(bT) bT.innerText = "訊號中斷";
             }
-            setTimeout(() => { 
+            setTimeout(function() { 
                 if(bI) bI.className = "fa-solid fa-satellite-dish"; 
                 if(bT) bT.innerText = "同步全球數據"; 
             }, 3000);
         }
 
         function calculate() {
-            // 取得輸入值，加上安全轉換
-            const c = parseFloat(document.getElementById('cost_price').value) || 0;
-            const cur = parseFloat(document.getElementById('current_price').value) || 0;
-            const s = parseFloat(document.getElementById('shares').value) || 0;
-            const fx = parseFloat(document.getElementById('fx_rate').value) || 1;
-            const q = parseFloat(document.getElementById('qqq_now').value) || 0;
-            const r = parseFloat(document.getElementById('transfer_ratio').value) || 0;
-            const re = parseFloat(document.getElementById('expected_return').value) || 0;
-            const y = parseInt(document.getElementById('years').value) || 0;
+            var c = parseFloat(document.getElementById('cost_price').value) || 0;
+            var cur = parseFloat(document.getElementById('current_price').value) || 0;
+            var s = parseFloat(document.getElementById('shares').value) || 0;
+            var fx = parseFloat(document.getElementById('fx_rate').value) || 1;
+            var q = parseFloat(document.getElementById('qqq_now').value) || 0;
+            var r = parseFloat(document.getElementById('transfer_ratio').value) || 0;
+            var re = parseFloat(document.getElementById('expected_return').value) || 0;
+            var y = parseInt(document.getElementById('years').value) || 0;
 
             document.getElementById('ratio_val').innerText = r;
             document.getElementById('ret_val').innerText = re;
             document.getElementById('yrs_val').innerText = y;
 
-            // 儲存資料
             try {
-                localStorage.setItem('winner_v9_safe', JSON.stringify({c, cur, s, fx, q}));
+                localStorage.setItem('winner_v10_safe', JSON.stringify({c:c, cur:cur, s:s, fx:fx, q:q}));
             } catch(e) {}
 
-            const totalTwd = cur * s;
-            const totalUsdInTwd = q * fx;
-            const globalNetWorth = totalTwd + totalUsdInTwd;
-            if(document.getElementById('global_networth')) document.getElementById('global_networth').innerText = fmt(globalNetWorth, 'NT$ ');
+            var totalTwd = cur * s;
+            var totalUsdInTwd = q * fx;
+            var globalNetWorth = totalTwd + totalUsdInTwd;
+            if(document.getElementById('global_networth')) {
+                document.getElementById('global_networth').innerText = fmt(globalNetWorth, 'NT$ ');
+            }
 
-            const profit = (cur - c) * s;
-            const margin = cur > 0 ? (cur - c) / cur : 0;
-            const roi = c > 0 ? ((cur - c) / c) * 100 : 0;
+            var profit = (cur - c) * s;
+            var margin = cur > 0 ? (cur - c) / cur : 0;
+            var roi = c > 0 ? ((cur - c) / c) * 100 : 0;
             
-            const extractTwd = profit * (r / 100);
-            const friction = extractTwd > 0 ? (extractTwd * 0.004425 + 850) : 0;
-            const netUsd = Math.max(0, extractTwd - friction) / fx;
+            var extractTwd = profit * (r / 100);
+            var friction = extractTwd > 0 ? (extractTwd * 0.004425 + 850) : 0;
+            var netUsd = Math.max(0, extractTwd - friction) / fx;
             
-            const willDivert = margin >= 0.1;
-            const futureWithStrategy = (q + (willDivert ? netUsd : 0)) * Math.pow(1 + (re / 100), y);
-            const futureWithoutStrategy = q * Math.pow(1 + (re / 100), y);
-            const extraWealth = futureWithStrategy - futureWithoutStrategy;
+            var willDivert = margin >= 0.1;
+            var futureWithStrategy = (q + (willDivert ? netUsd : 0)) * Math.pow(1 + (re / 100), y);
+            var futureWithoutStrategy = q * Math.pow(1 + (re / 100), y);
+            var extraWealth = futureWithStrategy - futureWithoutStrategy;
 
             document.getElementById('out_margin_text').innerText = (margin * 100).toFixed(1) + '%';
             document.getElementById('extra_wealth').innerText = fmt(extraWealth, '+$');
 
-            const roiB = document.getElementById('roi_badge');
+            var roiB = document.getElementById('roi_badge');
             if(roiB) {
                 roiB.innerText = (roi >= 0 ? '+' : '') + roi.toFixed(1) + '%';
-                roiB.className = `absolute -bottom-3 left-1/2 -translate-x-1/2 text-[11px] font-black px-3 py-1 rounded-full border border-slate-700 bg-slate-900 shadow-2xl z-10 ${roi >= 0 ? 'text-emerald-400' : 'text-rose-400'}`;
+                roiB.className = "absolute -bottom-3 left-1/2 -translate-x-1/2 text-[11px] font-black px-3 py-1 rounded-full border border-slate-700 bg-slate-900 shadow-2xl z-10 " + (roi >= 0 ? 'text-emerald-400' : 'text-rose-400');
             }
 
-            const mb = document.getElementById('margin_bar'), ab = document.getElementById('alert_box'), ai = document.getElementById('ai_briefing');
+            var mb = document.getElementById('margin_bar');
+            var ab = document.getElementById('alert_box');
+            var ai = document.getElementById('ai_briefing');
+            
             if(mb) mb.style.width = Math.min(100, Math.max(0, margin * 200)) + '%';
             
             if (margin >= 0.2) { 
-                if(mb) mb.className = "h-full bg-emerald-400 shadow-[0_0_20px_#10b981]"; 
-                if(ab) { ab.innerText = "水位極佳"; ab.className = "text-[10px] font-black px-4 py-2 rounded-xl bg-emerald-500/20 border border-emerald-500/30 text-emerald-400"; }
-                if(ai) {
-                    ai.innerHTML = `<i class="fa-solid fa-robot text-emerald-400 mr-2"></i> <b>AI 戰略官：</b> 護城河深厚。建議套現 <b>${fmt(extractTwd, 'NT$')}</b> 利潤，扣除成本後為 QQQ 注入 <b>${fmt(netUsd, '$')}</b>。`;
-                    ai.className = "bg-emerald-900/20 border border-emerald-500/30 rounded-2xl p-4 text-sm font-medium text-emerald-100 leading-relaxed";
-                }
-            } else if (margin >= 0.1) { 
-                if(mb) mb.className = "h-full bg-amber-400 shadow-[0_0_20px_#f59e0b]"; 
-                if(ab) { ab.innerText = "警戒狀態"; ab.className = "text-[10px] font-black px-4 py-2 rounded-xl bg-amber-500/20 border border-amber-500/30 text-amber-400"; }
-                if(ai) {
-                    ai.innerHTML = `<i class="fa-solid fa-robot text-amber-400 mr-2"></i> <b>AI 戰略官：</b>
+                if(mb) mb.className = "h-full
