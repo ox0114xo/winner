@@ -18,7 +18,6 @@
     <style>
         body { background: #020617; color: #f8fafc; font-family: system-ui, sans-serif; -webkit-tap-highlight-color: transparent; overflow-x: hidden; }
         
-        /* 全息呼吸背景光效 */
         .ambient-light-1 { position: fixed; top: -10%; left: -10%; width: 50vw; height: 50vw; background: radial-gradient(circle, rgba(16,185,129,0.15) 0%, rgba(0,0,0,0) 70%); filter: blur(60px); animation: float 15s ease-in-out infinite alternate; z-index: -1; pointer-events: none; }
         .ambient-light-2 { position: fixed; bottom: -10%; right: -10%; width: 60vw; height: 60vw; background: radial-gradient(circle, rgba(99,102,241,0.15) 0%, rgba(0,0,0,0) 70%); filter: blur(60px); animation: float 20s ease-in-out infinite alternate-reverse; z-index: -1; pointer-events: none; }
         @keyframes float { 0% { transform: translate(0, 0) scale(1); } 100% { transform: translate(10%, 10%) scale(1.2); } }
@@ -44,7 +43,7 @@
 <body class="min-h-screen p-3 md:p-8 flex flex-col items-center pb-32">
 
     <div class="ambient-light-1"></div>
-    <div class="current-light-2"></div>
+    <div class="ambient-light-2"></div>
 
     <div class="w-full max-w-6xl space-y-6">
         
@@ -66,7 +65,7 @@
                     <span id="global_networth" class="text-lg font-black text-white">--</span>
                 </div>
                 <button onclick="fetchMarketData()" class="flex-grow md:flex-grow-0 bg-indigo-600/90 hover:bg-indigo-500 text-white px-6 py-4 rounded-2xl font-black text-sm tracking-widest active:scale-95 transition-all shadow-[0_0_20px_rgba(79,70,229,0.3)] border border-indigo-400/30">
-                    <i id="f-icon" class="fa-solid fa-satellite-dish mr-2"></i> 同步全球數據
+                    <i id="f-icon" class="fa-solid fa-satellite-dish mr-2"></i> <span id="f-text">同步全球數據</span>
                 </button>
             </div>
         </div>
@@ -96,7 +95,7 @@
 
                     <div class="bg-gradient-to-br from-indigo-900/40 to-slate-900/40 p-6 rounded-[2rem] border border-indigo-500/20 shadow-inner">
                         <label class="text-xs font-black text-indigo-300 block mb-2 text-center uppercase tracking-widest"><i class="fa-brands fa-usps mr-1"></i>QQQ 美金戰略儲備</label>
-                        <input type="number" id="qqq_now" class="w-full bg-transparent border-none text-white text-4xl font-black text-center focus:ring-0 outline-none placeholder-slate-600" oninput="calculate()">
+                        <input type="number" id="qqq_now" class="w-full bg-transparent border-none text-white text-4xl font-black text-center focus:ring-0 outline-none" oninput="calculate()">
                     </div>
 
                     <div class="space-y-6 bg-slate-900/40 p-6 rounded-[2rem] border border-white/5" ontouchstart="hideKeyboard()">
@@ -130,7 +129,7 @@
                         </div>
                         
                         <div id="ai_briefing" class="bg-emerald-900/20 border border-emerald-500/20 rounded-2xl p-4 text-sm font-medium text-emerald-100 leading-relaxed">
-                            <i class="fa-solid fa-robot text-emerald-400 mr-2"></i> AI 戰略官：正在讀取您的資產數據...
+                            <i class="fa-solid fa-robot text-emerald-400 mr-2"></i> 系統啟動中...
                         </div>
                     </div>
 
@@ -201,8 +200,13 @@
 
         async function fetchMarketData() {
             uiInteract();
-            const bT = document.querySelector('#f-icon').parentNode.querySelector('span'), bI = document.getElementById('f-icon'), status = document.getElementById('sync_status');
-            bT.innerText = "連線衛星中..."; bI.className = "fa-solid fa-satellite-dish fa-spin";
+            // 修正錯誤：加入安全防護，確保元素存在
+            const bT = document.getElementById('f-text');
+            const bI = document.getElementById('f-icon');
+            const status = document.getElementById('sync_status');
+            
+            if(bT) bT.innerText = "連線衛星中..."; 
+            if(bI) bI.className = "fa-solid fa-satellite-dish fa-spin";
             
             let fx = null, stk = null;
             try { const r = await fetch('https://open.er-api.com/v6/latest/USD'); const d = await r.json(); fx = d.rates.TWD; } catch(e){}
@@ -216,16 +220,25 @@
             
             if (fx || stk) {
                 calculate();
-                bI.className = "fa-solid fa-check text-emerald-400"; bT.innerText = "全球同步完成";
-                const n = new Date(); status.innerText = `最新快照: ${n.getHours()}:${n.getMinutes().toString().padStart(2,'0')}`;
-                status.className = "text-[10px] font-bold text-emerald-400 uppercase tracking-widest mt-1";
+                if(bI) bI.className = "fa-solid fa-check text-emerald-400"; 
+                if(bT) bT.innerText = "全球同步完成";
+                const n = new Date(); 
+                if(status) {
+                    status.innerText = `最新快照: ${n.getHours()}:${n.getMinutes().toString().padStart(2,'0')}`;
+                    status.className = "text-[10px] font-bold text-emerald-400 uppercase tracking-widest mt-1";
+                }
             } else {
-                bI.className = "fa-solid fa-xmark text-rose-500"; bT.innerText = "訊號中斷";
+                if(bI) bI.className = "fa-solid fa-xmark text-rose-500"; 
+                if(bT) bT.innerText = "訊號中斷";
             }
-            setTimeout(() => { bI.className = "fa-solid fa-satellite-dish"; bT.innerText = "同步全球數據"; }, 3000);
+            setTimeout(() => { 
+                if(bI) bI.className = "fa-solid fa-satellite-dish"; 
+                if(bT) bT.innerText = "同步全球數據"; 
+            }, 3000);
         }
 
         function calculate() {
+            // 取得輸入值，加上安全轉換
             const c = parseFloat(document.getElementById('cost_price').value) || 0;
             const cur = parseFloat(document.getElementById('current_price').value) || 0;
             const s = parseFloat(document.getElementById('shares').value) || 0;
@@ -239,9 +252,11 @@
             document.getElementById('ret_val').innerText = re;
             document.getElementById('yrs_val').innerText = y;
 
-            localStorage.setItem('winner_v9', JSON.stringify({c, cur, s, fx, q}));
+            // 儲存資料
+            try {
+                localStorage.setItem('winner_v9_safe', JSON.stringify({c, cur, s, fx, q}));
+            } catch(e) {}
 
-            // 核心邏輯
             const totalTwd = cur * s;
             const totalUsdInTwd = q * fx;
             const globalNetWorth = totalTwd + totalUsdInTwd;
@@ -251,38 +266,36 @@
             const margin = cur > 0 ? (cur - c) / cur : 0;
             const roi = c > 0 ? ((cur - c) / c) * 100 : 0;
             
-            // 摩擦成本與淨額
             const extractTwd = profit * (r / 100);
             const friction = extractTwd > 0 ? (extractTwd * 0.004425 + 850) : 0;
             const netUsd = Math.max(0, extractTwd - friction) / fx;
             
-            // 雙軌預測
             const willDivert = margin >= 0.1;
             const futureWithStrategy = (q + (willDivert ? netUsd : 0)) * Math.pow(1 + (re / 100), y);
             const futureWithoutStrategy = q * Math.pow(1 + (re / 100), y);
             const extraWealth = futureWithStrategy - futureWithoutStrategy;
 
-            // 更新 UI
             document.getElementById('out_margin_text').innerText = (margin * 100).toFixed(1) + '%';
             document.getElementById('extra_wealth').innerText = fmt(extraWealth, '+$');
 
             const roiB = document.getElementById('roi_badge');
-            roiB.innerText = (roi >= 0 ? '+' : '') + roi.toFixed(1) + '%';
-            roiB.className = `absolute -bottom-3 left-1/2 -translate-x-1/2 text-[11px] font-black px-3 py-1 rounded-full border border-slate-700 bg-slate-900 shadow-2xl z-10 ${roi >= 0 ? 'text-rose-400' : 'text-emerald-400'}`;
+            if(roiB) {
+                roiB.innerText = (roi >= 0 ? '+' : '') + roi.toFixed(1) + '%';
+                roiB.className = `absolute -bottom-3 left-1/2 -translate-x-1/2 text-[11px] font-black px-3 py-1 rounded-full border border-slate-700 bg-slate-900 shadow-2xl z-10 ${roi >= 0 ? 'text-emerald-400' : 'text-rose-400'}`;
+            }
 
             const mb = document.getElementById('margin_bar'), ab = document.getElementById('alert_box'), ai = document.getElementById('ai_briefing');
-            mb.style.width = Math.min(100, Math.max(0, margin * 200)) + '%';
+            if(mb) mb.style.width = Math.min(100, Math.max(0, margin * 200)) + '%';
             
             if (margin >= 0.2) { 
-                mb.className = "h-full bg-emerald-400 shadow-[0_0_20px_#10b981]"; 
-                ab.innerText = "水位極佳"; ab.className = "text-[10px] font-black px-4 py-2 rounded-xl bg-emerald-500/20 border border-emerald-500/30 text-emerald-400"; 
-                ai.innerHTML = `<i class="fa-solid fa-robot text-emerald-400 mr-2"></i> <b>AI 戰略官：</b> 護城河深厚。建議套現 <b>${fmt(extractTwd, 'NT$')}</b> 利潤，扣除成本後為 QQQ 注入 <b>${fmt(netUsd, '$')}</b>，啟動跨國複利引擎。`;
-                ai.className = "bg-emerald-900/20 border border-emerald-500/30 rounded-2xl p-4 text-sm font-medium text-emerald-100 leading-relaxed";
+                if(mb) mb.className = "h-full bg-emerald-400 shadow-[0_0_20px_#10b981]"; 
+                if(ab) { ab.innerText = "水位極佳"; ab.className = "text-[10px] font-black px-4 py-2 rounded-xl bg-emerald-500/20 border border-emerald-500/30 text-emerald-400"; }
+                if(ai) {
+                    ai.innerHTML = `<i class="fa-solid fa-robot text-emerald-400 mr-2"></i> <b>AI 戰略官：</b> 護城河深厚。建議套現 <b>${fmt(extractTwd, 'NT$')}</b> 利潤，扣除成本後為 QQQ 注入 <b>${fmt(netUsd, '$')}</b>。`;
+                    ai.className = "bg-emerald-900/20 border border-emerald-500/30 rounded-2xl p-4 text-sm font-medium text-emerald-100 leading-relaxed";
+                }
             } else if (margin >= 0.1) { 
-                mb.className = "h-full bg-amber-400 shadow-[0_0_20px_#f59e0b]"; 
-                ab.innerText = "警戒狀態"; ab.className = "text-[10px] font-black px-4 py-2 rounded-xl bg-amber-500/20 border border-amber-500/30 text-amber-400"; 
-                ai.innerHTML = `<i class="fa-solid fa-robot text-amber-400 mr-2"></i> <b>AI 戰略官：</b> 護城河縮水至 ${ (margin*100).toFixed(1) }%。建議調降導流比例，或僅以保守金額 <b>${fmt(netUsd, '$')}</b> 進行試探性轉移。`;
-                ai.className = "bg-amber-900/20 border border-amber-500/30 rounded-2xl p-4 text-sm font-medium text-amber-100 leading-relaxed";
-            } else { 
-                mb.className = "h-full bg-rose-500 shadow-[0_0_20px_#f43f5e]"; 
-                ab.innerText = "封鎖導流"; ab.className = "text-[10px] font-bla
+                if(mb) mb.className = "h-full bg-amber-400 shadow-[0_0_20px_#f59e0b]"; 
+                if(ab) { ab.innerText = "警戒狀態"; ab.className = "text-[10px] font-black px-4 py-2 rounded-xl bg-amber-500/20 border border-amber-500/30 text-amber-400"; }
+                if(ai) {
+                    ai.innerHTML = `<i class="fa-solid fa-robot text-amber-400 mr-2"></i> <b>AI 戰略官：</b>
