@@ -5,147 +5,147 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>WinnerFlow 戰情室</title>
     
-    <link rel="manifest" href="manifest.json">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <link rel="apple-touch-icon" href="icon.png">
     <link rel="icon" type="image/png" href="icon.png">
 
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <script src="https://cdn.jsdelivr.net/npm/chart.js" onerror="console.warn('圖表套件載入失敗')"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     
     <style>
         body { background: #020617; color: #f8fafc; font-family: system-ui, sans-serif; -webkit-tap-highlight-color: transparent; overflow-x: hidden; }
-        .glass { background: rgba(15, 23, 42, 0.65); backdrop-filter: blur(24px); border: 1px solid rgba(255, 255, 255, 0.08); box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5); }
-        .input-hero { background: rgba(2, 6, 23, 0.8); border: 2px solid #334155; color: #fff; text-align: center; border-radius: 20px; padding: 16px; font-weight: 900; font-size: 1.5rem; width: 100%; outline: none; transition: all 0.3s ease; }
-        .input-hero:focus { border-color: #10b981; box-shadow: 0 0 25px rgba(16, 185, 129, 0.25); }
-        input[type=range] { -webkit-appearance: none; background: transparent; height: 50px; }
-        input[type=range]::-webkit-slider-runnable-track { background: #1e293b; height: 8px; border-radius: 4px; border: 1px solid rgba(255,255,255,0.05); }
-        input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; height: 28px; width: 28px; border-radius: 50%; background: #10b981; margin-top: -11px; border: 4px solid #fff; box-shadow: 0 0 20px rgba(16, 185, 129, 0.6); cursor: pointer; }
+        .ambient-light-1 { position: fixed; top: -10%; left: -10%; width: 50vw; height: 50vw; background: radial-gradient(circle, rgba(16,185,129,0.1) 0%, rgba(0,0,0,0) 70%); filter: blur(60px); z-index: -1; pointer-events: none; }
+        .glass { background: rgba(15, 23, 42, 0.8); backdrop-filter: blur(20px); border: 1px solid rgba(255, 255, 255, 0.05); border-radius: 2rem; box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5); }
+        .input-hero { background: rgba(2, 6, 23, 0.9); border: 2px solid #334155; color: #fff; text-align: center; border-radius: 16px; padding: 14px; font-weight: 900; font-size: 1.3rem; width: 100%; outline: none; transition: border-color 0.2s; }
+        .input-hero:focus { border-color: #10b981; }
+        input[type=range] { -webkit-appearance: none; background: transparent; height: 40px; }
+        input[type=range]::-webkit-slider-runnable-track { background: #1e293b; height: 8px; border-radius: 4px; }
+        input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; height: 26px; width: 26px; border-radius: 50%; background: #10b981; margin-top: -9px; border: 3px solid #fff; }
         input[type=number]::-webkit-inner-spin-button { -webkit-appearance: none; }
-        .text-glow { text-shadow: 0 0 20px currentColor; }
+        .text-glow { text-shadow: 0 0 15px currentColor; }
     </style>
 </head>
 
-<body class="min-h-screen p-3 md:p-8 flex flex-col items-center pb-12">
+<body class="min-h-screen p-4 md:p-8 flex flex-col items-center">
 
-    <div id="debug_box" style="display:none; width:100%; background:red; color:white; padding:10px; font-size:12px; text-align:center; z-index:9999; border-radius:10px; margin-bottom:10px;"></div>
+    <div class="ambient-light-1"></div>
 
-    <div class="w-full max-w-6xl space-y-6">
+    <div class="w-full max-w-5xl space-y-6">
         
-        <div class="flex flex-col md:flex-row justify-between items-center gap-4 px-2 mb-4">
-            <div class="flex items-center gap-4 w-full md:w-auto">
-                <img src="icon.png" class="w-16 h-16 rounded-[1.25rem] shadow-2xl border border-white/20" onerror="this.style.display='none'">
-                <div class="flex-grow">
+        <div class="flex flex-col md:flex-row justify-between items-center gap-4 px-2">
+            <div class="flex items-center gap-4 text-center md:text-left">
+                <img src="icon.png" class="w-14 h-14 rounded-2xl border border-white/10" onerror="this.style.display='none'">
+                <div>
                     <h1 class="text-2xl font-black italic tracking-tighter text-white">WINNER<span class="text-emerald-400">FLOW</span></h1>
-                    <div class="flex items-center gap-2 mt-1">
-                        <span class="relative flex h-2 w-2"><span class="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span></span>
-                        <p id="sync_status" class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">系統已啟動</p>
-                    </div>
+                    <p id="sync_status" class="text-[10px] font-bold text-emerald-500 uppercase tracking-widest mt-1">系統啟動成功</p>
                 </div>
             </div>
             
-            <div class="flex gap-3 w-full md:w-auto">
-                <button onclick="fetchMarketData()" class="flex-grow md:flex-grow-0 bg-indigo-600/90 hover:bg-indigo-500 text-white px-6 py-4 rounded-2xl font-black text-sm tracking-widest active:scale-95 transition-all shadow-[0_0_20px_rgba(79,70,229,0.3)]">
-                    <i id="f-icon" class="fa-solid fa-satellite-dish mr-2"></i> <span id="f-text">同步全球數據</span>
-                </button>
-            </div>
+            <button onclick="fetchMarketData()" class="w-full md:w-auto bg-indigo-600 hover:bg-indigo-500 text-white px-6 py-3 rounded-xl font-black text-sm tracking-widest active:scale-95 transition-all shadow-lg border border-indigo-400/30">
+                <i id="f-icon" class="fa-solid fa-satellite-dish"></i> <span id="f-text">同步市場數據</span>
+            </button>
         </div>
 
         <div class="lg:flex gap-6 space-y-6 lg:space-y-0">
             <div class="lg:w-[45%] space-y-6">
-                <div class="glass rounded-[2.5rem] p-6 md:p-8 space-y-8">
-                    <div class="grid grid-cols-2 gap-5">
-                        <div class="space-y-2">
-                            <label class="text-[11px] font-black text-slate-400 block text-center uppercase tracking-widest">0050 均價</label>
+                <div class="glass p-6 md:p-8 space-y-6 border-t border-emerald-500/20">
+                    <div class="grid grid-cols-2 gap-4">
+                        <div class="space-y-1">
+                            <label class="text-[10px] font-black text-slate-400 block text-center uppercase">0050 均價</label>
                             <input type="number" id="cost_price" value="48" class="input-hero" oninput="safeCalculate()">
                         </div>
-                        <div class="space-y-2 relative">
-                            <label class="text-[11px] font-black text-slate-400 block text-center uppercase tracking-widest">0050 市價</label>
+                        <div class="space-y-1 relative">
+                            <label class="text-[10px] font-black text-slate-400 block text-center uppercase">0050 市價</label>
                             <input type="number" id="current_price" value="77" class="input-hero text-emerald-400 text-glow" oninput="safeCalculate()">
-                            <span id="roi_badge" class="absolute -bottom-3 left-1/2 -translate-x-1/2 text-[10px] font-black px-3 py-1 rounded-full border border-slate-700 bg-slate-900 shadow-2xl z-10">--%</span>
+                            <span id="roi_badge" class="absolute -bottom-2 left-1/2 -translate-x-1/2 text-[9px] font-black px-2 py-0.5 rounded-full border border-slate-700 bg-black shadow-xl z-10">--%</span>
                         </div>
-                        <div class="space-y-2">
-                            <label class="text-[11px] font-black text-slate-400 block text-center uppercase tracking-widest">持有股數</label>
+                        <div class="space-y-1">
+                            <label class="text-[10px] font-black text-slate-400 block text-center uppercase">持有股數</label>
                             <input type="number" id="shares" value="1602" class="input-hero" oninput="safeCalculate()">
                         </div>
-                        <div class="space-y-2">
-                            <label class="text-[11px] font-black text-slate-400 block text-center uppercase tracking-widest">即時匯率</label>
+                        <div class="space-y-1">
+                            <label class="text-[10px] font-black text-slate-400 block text-center uppercase">即時匯率</label>
                             <input type="number" id="fx_rate" value="31.4" step="0.1" class="input-hero text-indigo-400" oninput="safeCalculate()">
                         </div>
                     </div>
 
-                    <div class="bg-indigo-900/20 p-6 rounded-[2rem] border border-indigo-500/20">
-                        <label class="text-xs font-black text-indigo-300 block mb-2 text-center uppercase tracking-widest">QQQ 美金戰略儲備</label>
-                        <input type="number" id="qqq_now" value="25660" class="w-full bg-transparent border-none text-white text-4xl font-black text-center focus:ring-0 outline-none" oninput="safeCalculate()">
+                    <div class="bg-slate-900/50 p-5 rounded-2xl border border-indigo-500/10">
+                        <label class="text-[10px] font-black text-indigo-300 block mb-2 text-center uppercase tracking-widest">QQQ 美金庫存</label>
+                        <input type="number" id="qqq_now" value="25660" class="w-full bg-transparent border-none text-white text-3xl font-black text-center focus:ring-0 outline-none" oninput="safeCalculate()">
                     </div>
 
-                    <div class="space-y-6 bg-slate-900/40 p-6 rounded-[2rem] border border-white/5" ontouchstart="hideKeyboard()">
+                    <div class="space-y-4" ontouchstart="hideKeyboard()">
                         <div>
-                            <div class="flex justify-between text-xs font-black text-slate-300 mb-2 uppercase">
-                                <span>導流火力</span> <span class="text-emerald-400 text-xl text-glow"><span id="ratio_val">25</span>%</span>
+                            <div class="flex justify-between text-[11px] font-black text-slate-300 mb-1 uppercase">
+                                <span>導流火力</span> <span class="text-emerald-400 text-lg"><span id="ratio_val">25</span>%</span>
                             </div>
                             <input type="range" id="transfer_ratio" min="0" max="100" value="25" class="w-full" oninput="uiInteract(); safeCalculate()">
                         </div>
-                        <div class="grid grid-cols-2 gap-6 pt-2">
-                            <div><label class="text-[10px] font-black text-slate-500 block uppercase">年化期望 (<span id="ret_val" class="text-indigo-400">11</span>%)</label><input type="range" id="expected_return" min="1" max="25" value="11" oninput="uiInteract(); safeCalculate()"></div>
-                            <div><label class="text-[10px] font-black text-slate-500 block uppercase">作戰年限 (<span id="yrs_val" class="text-emerald-400">5</span>年)</label><input type="range" id="years" min="1" max="30" value="5" oninput="uiInteract(); safeCalculate()"></div>
+                        <div class="grid grid-cols-2 gap-4">
+                            <div><label class="text-[9px] font-black text-slate-500 block">年化 (<span id="ret_val">11</span>%)</label><input type="range" id="expected_return" min="1" max="25" value="11" class="w-full" oninput="uiInteract(); safeCalculate()"></div>
+                            <div><label class="text-[9px] font-black text-slate-500 block">年限 (<span id="yrs_val">5</span>年)</label><input type="range" id="years" min="1" max="30" value="5" class="w-full" oninput="uiInteract(); safeCalculate()"></div>
                         </div>
                     </div>
                 </div>
             </div>
 
             <div class="lg:w-[55%] space-y-6" ontouchstart="hideKeyboard()">
-                <div class="glass rounded-[2.5rem] p-6 md:p-8 space-y-6 h-full flex flex-col">
+                <div class="glass p-6 md:p-8 space-y-6 h-full flex flex-col">
                     
                     <div>
-                        <div class="flex justify-between items-end mb-3">
+                        <div class="flex justify-between items-end mb-2">
                             <div>
-                                <span class="text-[11px] font-black text-slate-400 uppercase tracking-widest">價格護城河</span>
-                                <div id="out_margin_text" class="text-5xl font-black text-white mt-1">--</div>
+                                <span class="text-[10px] font-black text-slate-500 uppercase tracking-widest">Price Margin</span>
+                                <div id="out_margin_text" class="text-4xl font-black text-white mt-1">--</div>
                             </div>
-                            <div id="alert_box" class="text-[10px] font-black px-4 py-2 rounded-xl bg-slate-900 border border-slate-700 text-slate-400 uppercase tracking-widest">運算中</div>
+                            <div id="alert_box" class="text-[10px] font-bold px-3 py-1.5 rounded-lg bg-slate-900 border border-slate-700 text-slate-400">系統重置中</div>
                         </div>
-                        <div class="w-full bg-slate-900 h-2 rounded-full overflow-hidden mb-4">
-                            <div id="margin_bar" class="h-full transition-all duration-500" style="width: 0%"></div>
+                        <div class="w-full bg-slate-900 h-1.5 rounded-full overflow-hidden mb-4">
+                            <div id="margin_bar" class="h-full transition-all duration-500 bg-emerald-500" style="width: 0%"></div>
                         </div>
                         
-                        <div id="ai_briefing" class="bg-slate-800/50 rounded-2xl p-4 text-sm font-medium text-slate-300">
-                            正在載入戰略分析...
+                        <div class="grid grid-cols-2 gap-4">
+                            <div class="bg-emerald-900/20 p-4 rounded-xl border border-emerald-500/10 text-center">
+                                <span class="text-[9px] font-bold text-emerald-500/80 block mb-1 uppercase">本季淨導流</span>
+                                <span id="out_transfer" class="text-xl font-black text-emerald-400">--</span>
+                            </div>
+                            <div class="bg-white/5 p-4 rounded-xl border border-white/5 text-center">
+                                <span class="text-[9px] font-bold text-slate-400 block mb-1 uppercase">未來總資產</span>
+                                <span id="out_future" class="text-xl font-black text-white">--</span>
+                            </div>
                         </div>
                     </div>
 
-                    <div class="flex-grow min-h-[200px] relative mt-2 bg-slate-900/30 rounded-[2rem] p-4 border border-white/5">
-                        <div class="absolute top-6 left-6 z-10">
-                            <span class="text-[10px] font-black text-slate-400 uppercase tracking-widest block">執行策略將為您多創造</span>
-                            <span id="extra_wealth" class="text-2xl font-black text-emerald-400 text-glow">--</span>
-                        </div>
+                    <div class="flex-grow min-h-[150px] relative mt-2">
                         <canvas id="growthChart"></canvas>
                     </div>
 
+                    <div id="milestone" class="text-[10px] font-bold text-center py-3 px-4 rounded-xl bg-indigo-500/10 text-indigo-300 uppercase border border-indigo-500/20">
+                        資料計算中...
+                    </div>
                 </div>
             </div>
         </div>
     </div>
 
     <script>
+        // 🚀 【第一步：強制獵殺所有壞掉的快取 (Service Worker)】
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.getRegistrations().then(function(registrations) {
+                for(var i = 0; i < registrations.length; i++) {
+                    registrations[i].unregister();
+                    console.log("已清除舊版快取");
+                }
+            });
+        }
+
         var myChart = null;
 
-        // 【極致防禦】捕捉所有網頁錯誤，顯示在畫面上，避免死得不明不白
-        window.onerror = function(msg, url, lineNo, columnNo, error) {
-            var dbg = document.getElementById('debug_box');
-            if(dbg) {
-                dbg.style.display = 'block';
-                dbg.innerHTML = "系統發生錯誤: " + msg + " (請截圖給開發者)";
-            }
-            return false;
-        };
-
-        // 數字格式化安全版
+        // 安全數字格式化
         function fmt(n, p) { 
-            if (isNaN(n)) return (p || '') + '0';
-            return (p || '') + parseFloat(n).toLocaleString('en-US', {maximumFractionDigits: 0}); 
+            var num = parseFloat(n);
+            if (isNaN(num)) return (p || '') + '0';
+            return (p || '') + num.toLocaleString('en-US', {maximumFractionDigits: 0}); 
         }
 
         function hideKeyboard() { 
@@ -153,191 +153,211 @@
                 document.activeElement.blur(); 
             }
         }
-        function uiInteract() { 
-            hideKeyboard(); 
-            if (navigator.vibrate) {
-                try { navigator.vibrate(10); } catch(e){}
-            } 
-        }
+        function uiInteract() { hideKeyboard(); }
 
-        // 核心計算安全包裝 (如果壞掉不會影響其他按鈕)
+        // 🚀 【第二步：超強防護的計算函數】
         function safeCalculate() {
             try {
-                calculateCore();
-            } catch(e) {
-                console.error("計算過程發生錯誤:", e);
-                var ai = document.getElementById('ai_briefing');
-                if(ai) ai.innerHTML = "⚠️ 計算模組發生異常，請重整網頁。";
-            }
-        }
+                // 1. 取得所有輸入框，若有空值或怪字元，強制給予安全數字
+                var c = parseFloat(document.getElementById('cost_price').value);
+                if(isNaN(c) || c <= 0) c = 48;
+                
+                var cur = parseFloat(document.getElementById('current_price').value);
+                if(isNaN(cur) || cur <= 0) cur = 77;
+                
+                var s = parseFloat(document.getElementById('shares').value);
+                if(isNaN(s) || s < 0) s = 1602;
+                
+                var fx = parseFloat(document.getElementById('fx_rate').value);
+                if(isNaN(fx) || fx <= 0) fx = 31.4; // 絕對不能讓匯率為0，否則會算出 Infinity
+                
+                var q = parseFloat(document.getElementById('qqq_now').value);
+                if(isNaN(q) || q < 0) q = 25660;
 
-        // 真實計算邏輯
-        function calculateCore() {
-            var c_input = document.getElementById('cost_price');
-            var cur_input = document.getElementById('current_price');
-            var s_input = document.getElementById('shares');
-            var fx_input = document.getElementById('fx_rate');
-            var q_input = document.getElementById('qqq_now');
-            
-            // 確保元素存在再取值
-            if (!c_input || !cur_input || !s_input) return;
+                var r = parseFloat(document.getElementById('transfer_ratio').value) || 25;
+                var re = parseFloat(document.getElementById('expected_return').value) || 11;
+                var y = parseInt(document.getElementById('years').value) || 5;
 
-            var c = parseFloat(c_input.value) || 0;
-            var cur = parseFloat(cur_input.value) || 0;
-            var s = parseFloat(s_input.value) || 0;
-            var fx = parseFloat(fx_input.value) || 1;
-            var q = parseFloat(q_input.value) || 0;
-            var r = parseFloat(document.getElementById('transfer_ratio').value) || 0;
-            var re = parseFloat(document.getElementById('expected_return').value) || 0;
-            var y = parseInt(document.getElementById('years').value) || 0;
+                // 2. 更新滑桿文字
+                document.getElementById('ratio_val').innerText = r;
+                document.getElementById('ret_val').innerText = re;
+                document.getElementById('yrs_val').innerText = y;
 
-            document.getElementById('ratio_val').innerText = r;
-            document.getElementById('ret_val').innerText = re;
-            document.getElementById('yrs_val').innerText = y;
+                // 3. 儲存進乾淨的記憶體空間
+                localStorage.setItem('winner_v12_clean', JSON.stringify({c:c, cur:cur, s:s, fx:fx, q:q}));
 
-            // 儲存資料
-            try { localStorage.setItem('winner_v11', JSON.stringify({c:c, cur:cur, s:s, fx:fx, q:q})); } catch(e) {}
+                // 4. 核心數學計算
+                var profit = (cur - c) * s;
+                var margin = (cur - c) / cur;
+                var roi = ((cur - c) / c) * 100;
+                
+                var extractTwd = profit * (r / 100);
+                var friction = extractTwd > 0 ? (extractTwd * 0.004425 + 850) : 0;
+                var netUsd = 0;
+                if (extractTwd - friction > 0) {
+                    netUsd = (extractTwd - friction) / fx;
+                }
+                
+                var willDivert = margin >= 0.1;
+                var principal = q + (willDivert ? netUsd : 0);
+                var future = principal * Math.pow(1 + (re / 100), y);
 
-            var profit = (cur - c) * s;
-            var margin = cur > 0 ? (cur - c) / cur : 0;
-            var roi = c > 0 ? ((cur - c) / c) * 100 : 0;
-            
-            var extractTwd = profit * (r / 100);
-            var friction = extractTwd > 0 ? (extractTwd * 0.004425 + 850) : 0;
-            var netUsd = Math.max(0, extractTwd - friction) / fx;
-            
-            var willDivert = margin >= 0.1;
-            var futureWithStrategy = (q + (willDivert ? netUsd : 0)) * Math.pow(1 + (re / 100), y);
-            var futureWithoutStrategy = q * Math.pow(1 + (re / 100), y);
-            var extraWealth = futureWithStrategy - futureWithoutStrategy;
+                // 5. 寫入畫面
+                document.getElementById('out_margin_text').innerText = (margin * 100).toFixed(1) + '%';
+                document.getElementById('out_transfer').innerText = fmt(netUsd, '$');
+                document.getElementById('out_future').innerText = fmt(future, '$');
 
-            document.getElementById('out_margin_text').innerText = (margin * 100).toFixed(1) + '%';
-            document.getElementById('extra_wealth').innerText = fmt(extraWealth, '+$');
-
-            var roiB = document.getElementById('roi_badge');
-            if(roiB) {
+                var roiB = document.getElementById('roi_badge');
                 roiB.innerText = (roi >= 0 ? '+' : '') + roi.toFixed(1) + '%';
-                roiB.className = "absolute -bottom-3 left-1/2 -translate-x-1/2 text-[10px] font-black px-3 py-1 rounded-full border border-slate-700 bg-slate-900 shadow-2xl z-10 " + (roi >= 0 ? 'text-emerald-400' : 'text-rose-400');
-            }
+                roiB.className = "absolute -bottom-2 left-1/2 -translate-x-1/2 text-[9px] font-black px-2 py-0.5 rounded-full border border-slate-700 bg-black z-10 " + (roi >= 0 ? 'text-emerald-400' : 'text-rose-400');
 
-            var mb = document.getElementById('margin_bar');
-            var ab = document.getElementById('alert_box');
-            var ai = document.getElementById('ai_briefing');
-            
-            if(mb) mb.style.width = Math.min(100, Math.max(0, margin * 200)) + '%';
-            
-            if (margin >= 0.2) { 
-                if(mb) mb.className = "h-full bg-emerald-400"; 
-                if(ab) { ab.innerText = "水位極佳"; ab.className = "text-[10px] font-black px-4 py-2 rounded-xl bg-emerald-500/20 text-emerald-400"; }
-                if(ai) ai.innerHTML = '🛡️ <b>AI 戰略官：</b> 護城河深厚。建議套現 <b>' + fmt(extractTwd, 'NT$') + '</b> 利潤，注入 <b>' + fmt(netUsd, '$') + '</b> 擴大美股資產。';
-            } else if (margin >= 0.1) { 
-                if(mb) mb.className = "h-full bg-amber-400"; 
-                if(ab) { ab.innerText = "警戒狀態"; ab.className = "text-[10px] font-black px-4 py-2 rounded-xl bg-amber-500/20 text-amber-400"; }
-                if(ai) ai.innerHTML = '⚠️ <b>AI 戰略官：</b> 護城河縮水。建議調降比例，保守注入 <b>' + fmt(netUsd, '$') + '</b>。';
-            } else { 
-                if(mb) mb.className = "h-full bg-rose-500"; 
-                if(ab) { ab.innerText = "封鎖導流"; ab.className = "text-[10px] font-black px-4 py-2 rounded-xl bg-rose-500/20 text-rose-400"; }
-                if(ai) ai.innerHTML = '🛑 <b>AI 戰略官：</b> 摩擦成本過高，<b>通道已封鎖</b>，請按兵不動。';
-            }
+                var mb = document.getElementById('margin_bar');
+                var ab = document.getElementById('alert_box');
+                
+                mb.style.width = Math.min(100, Math.max(0, margin * 200)) + '%';
+                
+                if (margin >= 0.2) { 
+                    mb.className = "h-full bg-emerald-500"; 
+                    ab.innerText = "SAFE 建議導流"; ab.className = "text-[10px] font-bold px-3 py-1.5 rounded-lg bg-emerald-500/20 text-emerald-400";
+                } else if (margin >= 0.1) { 
+                    mb.className = "h-full bg-amber-500"; 
+                    ab.innerText = "WARN 保守導流"; ab.className = "text-[10px] font-bold px-3 py-1.5 rounded-lg bg-amber-500/20 text-amber-400";
+                } else { 
+                    mb.className = "h-full bg-rose-500"; 
+                    ab.innerText = "STOP 暫停操作"; ab.className = "text-[10px] font-bold px-3 py-1.5 rounded-lg bg-rose-500/20 text-rose-500";
+                }
 
-            // 安全繪製圖表 (即使 Chart.js 沒載入也不會當機)
-            try {
-                if (typeof Chart !== 'undefined') {
-                    var lbls = [], dtaWith = [], dtaWithout = [];
-                    for (var i = 0; i <= y; i++) { 
-                        lbls.push("Y" + i); 
-                        dtaWith.push((q + (willDivert ? netUsd : 0)) * Math.pow(1 + (re / 100), i)); 
-                        dtaWithout.push(q * Math.pow(1 + (re / 100), i));
-                    }
-                    if (myChart) myChart.destroy();
-                    var ctx = document.getElementById('growthChart');
-                    if(ctx) {
-                        var ctx2d = ctx.getContext('2d');
-                        var gradWith = ctx2d.createLinearGradient(0,0,0,250); 
-                        gradWith.addColorStop(0, 'rgba(16, 185, 129, 0.5)'); 
-                        gradWith.addColorStop(1, 'transparent');
+                // 6. 圖表繪製 (包裝在 try-catch 防止 Chart.js 載入失敗時卡死全站)
+                try {
+                    if (typeof Chart !== 'undefined') {
+                        var lbls = [], dta = [];
+                        for (var i = 0; i <= y; i++) { 
+                            lbls.push("Y" + i); 
+                            dta.push(principal * Math.pow(1 + (re / 100), i)); 
+                        }
+                        if (myChart) myChart.destroy();
+                        var ctx = document.getElementById('growthChart').getContext('2d');
+                        var grad = ctx.createLinearGradient(0,0,0,150); 
+                        grad.addColorStop(0, 'rgba(16, 185, 129, 0.3)'); 
+                        grad.addColorStop(1, 'transparent');
                         
-                        myChart = new Chart(ctx2d, { 
+                        myChart = new Chart(ctx, { 
                             type: 'line', 
                             data: { 
                                 labels: lbls, 
-                                datasets: [
-                                    { label: '執行戰略', data: dtaWith, borderColor: '#10b981', backgroundColor: gradWith, fill: true, tension: 0.4, borderWidth: 3, pointRadius: 0 },
-                                    { label: '維持現狀', data: dtaWithout, borderColor: '#6366f1', borderDash: [5, 5], backgroundColor: 'transparent', fill: false, tension: 0.4, borderWidth: 2, pointRadius: 0 }
-                                ] 
+                                datasets: [{ data: dta, borderColor: '#10b981', backgroundColor: grad, fill: true, tension: 0.4, borderWidth: 2, pointRadius: 0 }] 
                             }, 
                             options: { 
-                                responsive: true, maintainAspectRatio: false, layout: { padding: { top: 40 } }, 
+                                responsive: true, maintainAspectRatio: false, 
                                 plugins: { legend: { display: false } }, 
-                                scales: { y: { display: false }, x: { grid: { display: false }, ticks: { color: '#475569', font: {size: 10} } } } 
+                                scales: { y: { display: false }, x: { grid: { display: false }, ticks: { color: '#64748b', font: {size: 10} } } } 
                             } 
                         });
                     }
-                }
-            } catch(chartErr) {
-                console.warn("圖表繪製跳過: ", chartErr);
+                } catch(err) { console.log("圖表暫不顯示"); }
+                
+                document.getElementById('milestone').innerText = "✅ 計算完成，系統運作正常";
+
+            } catch(e) {
+                console.log("計算發生錯誤", e);
+                document.getElementById('milestone').innerText = "⚠️ 系統自我修復中...";
             }
         }
 
-        // 同步按鈕邏輯
+        // 🚀 【第三步：API 超時防卡死連線系統】
+        function fetchWithTimeout(url, timeoutLimit) {
+            return Promise.race([
+                fetch(url),
+                new Promise(function(_, reject) {
+                    setTimeout(function() { reject(new Error('timeout')); }, timeoutLimit);
+                })
+            ]);
+        }
+
         async function fetchMarketData() {
             uiInteract();
             var bT = document.getElementById('f-text');
             var bI = document.getElementById('f-icon');
             var statusStr = document.getElementById('sync_status');
             
-            if(bT) bT.innerText = "連線中..."; 
-            if(bI) bI.className = "fa-solid fa-satellite-dish fa-spin";
+            bT.innerText = "連線中(最長5秒)"; 
+            bI.className = "fa-solid fa-satellite-dish fa-spin";
             
             let fx = null, stk = null;
             
-            // 使用最簡單安全的 fetch
+            // 嘗試連線匯率 (5秒放棄)
             try { 
-                const res1 = await fetch('https://api.exchangerate-api.com/v4/latest/USD'); 
+                const res1 = await fetchWithTimeout('https://open.er-api.com/v6/latest/USD', 5000); 
                 const data1 = await res1.json(); 
                 if(data1 && data1.rates) fx = data1.rates.TWD; 
-            } catch(e){ console.log("匯率失敗"); }
+            } catch(e){ console.log("匯率連線超時"); }
             
+            // 嘗試連線台股 (5秒放棄)
             try { 
-                const u = encodeURIComponent('https://query1.finance.yahoo.com/v8/finance/chart/0050.TW');
-                const res2 = await fetch(`https://api.allorigins.win/raw?url=${u}`); 
+                const res2 = await fetchWithTimeout('https://openapi.twse.com.tw/v1/exchangeReport/STOCK_DAY_ALL', 5000); 
                 const data2 = await res2.json(); 
-                if(data2 && data2.chart) stk = data2.chart.result[0].meta.regularMarketPrice;
-            } catch(e){ console.log("股價失敗"); }
+                for(var i=0; i<data2.length; i++) {
+                    if(data2[i].Code === "0050") { stk = parseFloat(data2[i].ClosingPrice); break; }
+                }
+            } catch(e){ console.log("股價連線超時"); }
 
-            if (fx && document.getElementById('fx_rate')) document.getElementById('fx_rate').value = fx.toFixed(2);
-            if (stk && document.getElementById('current_price')) document.getElementById('current_price').value = stk;
+            if (fx && fx > 0) document.getElementById('fx_rate').value = fx.toFixed(2);
+            if (stk && stk > 0) document.getElementById('current_price').value = stk;
             
+            // 只要有拿到一個資料，就算成功
             if (fx || stk) {
                 safeCalculate();
-                if(bI) bI.className = "fa-solid fa-check text-emerald-400"; 
-                if(bT) bT.innerText = "同步完成";
+                bI.className = "fa-solid fa-check text-emerald-400"; 
+                bT.innerText = "同步完成";
                 var n = new Date(); 
-                if(statusStr) statusStr.innerText = "更新於 " + n.getHours() + ":" + n.getMinutes().toString().padStart(2,'0');
+                statusStr.innerText = "最後更新: " + n.getHours() + ":" + n.getMinutes().toString().padStart(2,'0');
+                statusStr.className = "text-[10px] font-bold text-emerald-400 uppercase tracking-widest mt-1";
             } else {
-                if(bI) bI.className = "fa-solid fa-xmark text-rose-500"; 
-                if(bT) bT.innerText = "連線失敗";
+                bI.className = "fa-solid fa-xmark text-rose-500"; 
+                bT.innerText = "連線失敗";
+                statusStr.innerText = "API無回應，請手動輸入";
+                statusStr.className = "text-[10px] font-bold text-rose-500 uppercase tracking-widest mt-1";
             }
+            
+            // 3秒後恢復按鈕
             setTimeout(function() { 
-                if(bI) bI.className = "fa-solid fa-rotate-right"; 
-                if(bT) bT.innerText = "同步全球數據"; 
+                bI.className = "fa-solid fa-satellite-dish"; 
+                bT.innerText = "同步市場數據"; 
             }, 3000);
         }
 
-        // 系統啟動
+        // 🚀 【第四步：啟動自我修復機制】
         function initApp() {
-            var c_val = 48, cur_val = 77, s_val = 1602, fx_val = 31.4, q_val = 25660;
+            var defaults = {c: 48, cur: 77, s: 1602, fx: 31.4, q: 25660};
+            
             try {
-                var saved = localStorage.getItem('winner_v11');
+                var saved = localStorage.getItem('winner_v12_clean');
                 if (saved) {
                     var parsed = JSON.parse(saved);
-                    if(parsed) {
-                        c_val = parsed.c || 48; cur_val = parsed.cur || 77;
-                        s_val = parsed.s || 1602; fx_val = parsed.fx || 31.4; q_val = parsed.q || 25660;
-                    }
+                    // 嚴格檢查取出來的資料是不是健康的數字
+                    if(parsed && !isNaN(parseFloat(parsed.c))) defaults.c = parseFloat(parsed.c);
+                    if(parsed && !isNaN(parseFloat(parsed.cur))) defaults.cur = parseFloat(parsed.cur);
+                    if(parsed && !isNaN(parseFloat(parsed.s))) defaults.s = parseFloat(parsed.s);
+                    if(parsed && !isNaN(parseFloat(parsed.fx))) defaults.fx = parseFloat(parsed.fx);
+                    if(parsed && !isNaN(parseFloat(parsed.q))) defaults.q = parseFloat(parsed.q);
                 }
-            } catch(e) { console.log("讀取存檔失敗"); }
+            } catch(e) {
+                // 如果快取中毒，直接洗掉重來
+                localStorage.removeItem('winner_v12_clean');
+            }
             
-            if(document.getElementById('cost_price')) document.getElementById('cost_price').value = c_val; 
-            if(document.getElementById('current_price')) document.getElementById('current_price').value = cur_val;
-            if(document.getElementById('sh
+            document.getElementById('cost_price').value = defaults.c; 
+            document.getElementById('current_price').value = defaults.cur;
+            document.getElementById('shares').value = defaults.s; 
+            document.getElementById('fx_rate').value = defaults.fx;
+            document.getElementById('qqq_now').value = defaults.q;
+            
+            safeCalculate();
+        }
+
+        // 保證第一時間執行
+        initApp();
+
+    </script>
+</body>
+</html>
