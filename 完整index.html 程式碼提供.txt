@@ -1,0 +1,1207 @@
+﻿<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>WinnerFlow</title>
+<link rel="apple-touch-icon" href="icon.png">
+<link rel="icon" type="image/png" href="icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Syne:wght@700;800;900&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+:root{
+ --green:#00d97e;--green-dim:rgba(0,217,126,0.12);--green-glow:rgba(0,217,126,0.25);
+ --red:#ff4d6d;--amber:#ffb800;
+ --bg:#07090f;--surface:#0d1117;--card:#131b27;--card2:#1a2332;
+ --border:rgba(255,255,255,0.07);--border2:rgba(255,255,255,0.04);
+ --text:#f0f4ff;--muted:#5a6a8a;--muted2:#3a4a65;
+ --fs:16px;
+}
+html{font-size:var(--fs)}
+body{background:var(--bg);color:var(--text);font-family:'Inter',sans-serif;
+ min-height:100vh;overflow-x:hidden;padding-bottom:80px}
+
+/* BG texture */
+body::before{content:'';position:fixed;inset:0;
+ background:radial-gradient(ellipse 80% 50% at 50% -20%,rgba(0,217,126,0.06),transparent),
+            radial-gradient(ellipse 60% 40% at 80% 80%,rgba(99,102,241,0.05),transparent);
+ pointer-events:none;z-index:0}
+
+/* ===== 底部導航 ===== */
+.nav{position:fixed;bottom:0;left:0;right:0;z-index:100;
+ background:rgba(7,9,15,0.92);backdrop-filter:blur(24px);
+ border-top:1px solid var(--border);
+ display:grid;grid-template-columns:repeat(5,1fr);padding:8px 0 max(8px,env(safe-area-inset-bottom))}
+.nav-btn{display:flex;flex-direction:column;align-items:center;gap:3px;
+ border:none;background:none;cursor:pointer;padding:6px 4px;
+ color:var(--muted);transition:.2s;position:relative}
+.nav-btn.active{color:var(--green)}
+.nav-btn svg{width:22px;height:22px;stroke-width:1.8}
+.nav-btn span{font-size:10px;font-weight:600;font-family:'Inter',sans-serif;letter-spacing:.02em}
+.nav-btn.active::after{content:'';position:absolute;top:0;left:50%;transform:translateX(-50%);
+ width:32px;height:2px;background:var(--green);border-radius:0 0 4px 4px}
+
+/* ===== 頁面 ===== */
+.page{display:none;min-height:calc(100vh - 80px);padding:0;animation:fadeUp .2s ease}
+.page.active{display:block}
+@keyframes fadeUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+
+/* ===== 首頁 Header ===== */
+.home-header{padding:20px 20px 0;display:flex;justify-content:space-between;align-items:center}
+.brand{font-family:'Syne',sans-serif;font-weight:900;font-size:22px;letter-spacing:-.02em}
+.brand span{color:var(--green)}
+.header-actions{display:flex;gap:8px}
+.icon-btn{width:38px;height:38px;border-radius:12px;background:var(--card);
+ border:1px solid var(--border);display:flex;align-items:center;justify-content:center;
+ cursor:pointer;color:var(--muted);transition:.2s}
+.icon-btn:hover,.icon-btn:active{color:var(--text);border-color:rgba(255,255,255,0.15)}
+.icon-btn svg{width:17px;height:17px;stroke-width:2}
+
+/* ===== 資產英雄區 ===== */
+.hero{padding:28px 20px 20px;text-align:center;position:relative}
+.hero-label{font-size:11px;font-weight:600;color:var(--muted);letter-spacing:.1em;text-transform:uppercase;margin-bottom:10px}
+.hero-value{
+ font-family:'Syne',sans-serif;
+ font-size:clamp(32px, 11vw, 52px);
+ font-weight:900;
+ line-height:1.1;
+ white-space:nowrap;
+ overflow:hidden;
+ text-overflow:ellipsis;
+ width:100%;
+ background:linear-gradient(135deg,#fff 0%,var(--green) 100%);
+ -webkit-background-clip:text;
+ -webkit-text-fill-color:transparent;
+ margin-bottom:8px;
+}
+.hero-sub{font-size:13px;color:var(--muted);display:flex;align-items:center;justify-content:center;gap:8px}
+.badge-up{color:var(--green);background:var(--green-dim);padding:3px 10px;border-radius:20px;font-weight:700;font-size:13px}
+.badge-down{color:var(--red);background:rgba(255,77,109,0.12);padding:3px 10px;border-radius:20px;font-weight:700;font-size:13px}
+
+/* ===== 大盤快訊 ===== */
+.ticker-wrap{overflow:hidden;padding:12px 20px;border-top:1px solid var(--border2);border-bottom:1px solid var(--border2);background:var(--surface)}
+.ticker-inner{display:flex;gap:24px;animation:ticker 25s linear infinite;width:max-content}
+@keyframes ticker{from{transform:translateX(0)}to{transform:translateX(-50%)}}
+.ticker-item{white-space:nowrap;font-size:12px;font-family:'DM Mono',monospace;color:var(--muted);display:flex;gap:6px}
+.ticker-item .t-name{color:var(--text);font-weight:500}
+.t-up{color:var(--green)}.t-dn{color:var(--red)}
+
+/* ===== 卡片 ===== */
+.cards{padding:16px 20px;display:flex;flex-direction:column;gap:12px}
+.card{background:var(--card);border:1px solid var(--border);border-radius:20px;overflow:hidden}
+.card-header{padding:16px 20px 12px;display:flex;justify-content:space-between;align-items:center}
+.card-title{font-size:11px;font-weight:700;color:var(--muted);letter-spacing:.08em;text-transform:uppercase}
+.card-action{font-size:12px;color:var(--green);font-weight:600;cursor:pointer}
+.card-body{padding:0 20px 20px}
+
+/* 2欄 stat */
+.stat-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.stat-box{background:var(--card2);border-radius:14px;padding:14px;border:1px solid var(--border2)}
+.stat-box .s-label{font-size:10px;color:var(--muted);font-weight:600;letter-spacing:.06em;text-transform:uppercase;margin-bottom:6px}
+.stat-box .s-val{font-family:'DM Mono',monospace;font-size:20px;font-weight:500;color:var(--text);line-height:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.stat-box .s-sub{font-size:10px;color:var(--muted);margin-top:3px}
+.stat-box.green .s-val{color:var(--green)}
+.stat-box.red .s-val{color:var(--red)}
+
+/* margin bar */
+.margin-bar-wrap{padding:0 20px 16px}
+.margin-bar-labels{display:flex;justify-content:space-between;font-size:11px;color:var(--muted);margin-bottom:6px}
+.margin-bar-track{height:6px;background:var(--card2);border-radius:4px;overflow:hidden}
+.margin-bar-fill{height:100%;border-radius:4px;transition:width .5s cubic-bezier(.4,0,.2,1)}
+
+/* 圖表 */
+.chart-wrap{height:120px;padding:0 20px 16px;position:relative}
+
+/* ===== 輸入區 ===== */
+.input-section{padding:16px 20px;display:flex;flex-direction:column;gap:10px}
+.input-row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.input-group{display:flex;flex-direction:column;gap:6px}
+.input-label{font-size:10px;font-weight:700;color:var(--muted);letter-spacing:.07em;text-transform:uppercase}
+.inp{background:var(--card2);border:1.5px solid var(--border);border-radius:12px;
+ color:var(--text);font-family:'DM Mono',monospace;font-size:18px;font-weight:500;
+ padding:12px 14px;width:100%;outline:none;transition:.15s;text-align:right;-webkit-appearance:none}
+.inp:focus{border-color:var(--green);background:#0f1a24}
+.inp::placeholder{color:var(--muted2)}
+input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none}
+.inp-full{grid-column:1/-1;font-size:24px;text-align:center}
+.inp-note{grid-column:1/-1;font-size:10px;color:var(--muted);text-align:right;margin-top:-4px}
+
+/* slider */
+.slider-group{display:flex;flex-direction:column;gap:8px}
+.slider-row{display:flex;justify-content:space-between;align-items:center}
+.slider-label{font-size:12px;color:var(--muted);font-weight:600}
+.slider-val{font-family:'DM Mono',monospace;font-size:14px;color:var(--green);font-weight:500}
+input[type=range]{-webkit-appearance:none;width:100%;height:36px;background:transparent}
+input[type=range]::-webkit-slider-runnable-track{background:var(--card2);height:4px;border-radius:2px}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:20px;height:20px;
+ border-radius:50%;background:var(--green);margin-top:-8px;border:2.5px solid var(--bg);
+ box-shadow:0 0 0 3px var(--green-dim)}
+
+/* ===== 股票追蹤 ===== */
+.page-header{padding:24px 20px 16px;display:flex;justify-content:space-between;align-items:flex-start}
+.page-title{font-family:'Syne',sans-serif;font-size:26px;font-weight:900;line-height:1.1}
+.page-subtitle{font-size:12px;color:var(--muted);margin-top:4px}
+.add-fab{width:42px;height:42px;border-radius:14px;background:var(--green);
+ display:flex;align-items:center;justify-content:center;cursor:pointer;border:none;
+ box-shadow:0 4px 16px var(--green-glow);transition:.15s}
+.add-fab:active{transform:scale(0.93)}
+.add-fab svg{width:20px;height:20px;stroke:#07090f;stroke-width:2.5}
+
+/* stock item */
+.stock-item{background:var(--card);border:1px solid var(--border);border-radius:16px;
+ padding:16px;margin:0 20px 10px;display:flex;align-items:center;gap:14px;
+ transition:.15s;cursor:pointer}
+.stock-item:active{background:var(--card2)}
+.stock-avatar{width:44px;height:44px;border-radius:12px;background:var(--card2);
+ display:flex;align-items:center;justify-content:center;font-family:'DM Mono',monospace;
+ font-size:11px;font-weight:500;color:var(--muted);border:1px solid var(--border);flex-shrink:0}
+.stock-info{flex:1;min-width:0}
+.stock-code{font-family:'DM Mono',monospace;font-size:15px;font-weight:500;color:var(--text)}
+.stock-name{font-size:11px;color:var(--muted);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.stock-right{text-align:right;flex-shrink:0}
+.stock-roi{font-family:'DM Mono',monospace;font-size:16px;font-weight:500}
+.stock-profit{font-size:11px;color:var(--muted);margin-top:2px}
+.roi-pos{color:var(--green)}.roi-neg{color:var(--red)}
+
+/* dropdown */
+.drop-sheet{display:none;position:fixed;inset:0;z-index:200;background:rgba(0,0,0,0.6);backdrop-filter:blur(8px);align-items:flex-end}
+.drop-sheet.open{display:flex;animation:fadeIn .2s}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+.drop-inner{background:#131b27;border-radius:24px 24px 0 0;width:100%;max-height:70vh;
+ border-top:1px solid var(--border);padding-bottom:env(safe-area-inset-bottom)}
+.drop-handle{width:40px;height:4px;background:var(--muted2);border-radius:2px;margin:12px auto 4px}
+.drop-search{margin:8px 16px 4px;background:var(--card2);border:1.5px solid var(--border);
+ border-radius:12px;padding:12px 16px;color:var(--text);font-size:15px;width:calc(100% - 32px);
+ outline:none;font-family:'Inter',sans-serif}
+.drop-search:focus{border-color:var(--green)}
+.drop-list{overflow-y:auto;max-height:calc(70vh - 120px)}
+.drop-item{padding:14px 16px;display:flex;align-items:center;gap:14px;cursor:pointer;border-bottom:1px solid var(--border2);transition:.1s}
+.drop-item:active{background:var(--card2)}
+.drop-item-code{font-family:'DM Mono',monospace;font-size:14px;color:var(--text);font-weight:500;min-width:60px}
+.drop-item-name{flex:1;font-size:13px;color:var(--muted)}
+.drop-item-type{font-size:10px;font-weight:700;padding:2px 8px;border-radius:6px;background:var(--card2);color:var(--muted);letter-spacing:.04em}
+
+/* add form sheet */
+.form-sheet{display:none;position:fixed;inset:0;z-index:200;background:rgba(0,0,0,0.6);backdrop-filter:blur(8px);align-items:flex-end}
+.form-sheet.open{display:flex;animation:fadeIn .2s}
+.form-inner{background:#131b27;border-radius:24px 24px 0 0;width:100%;padding:0 20px 32px;border-top:1px solid var(--border)}
+.form-title{font-family:'Syne',sans-serif;font-size:20px;font-weight:800;padding:20px 0 16px;display:flex;justify-content:space-between;align-items:center}
+.form-close{color:var(--muted);font-size:22px;cursor:pointer;line-height:1;background:none;border:none}
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px}
+.form-label{font-size:10px;font-weight:700;color:var(--muted);letter-spacing:.07em;text-transform:uppercase;margin-bottom:6px;display:block}
+.form-inp{background:var(--card2);border:1.5px solid var(--border);border-radius:12px;
+ color:var(--text);font-family:'DM Mono',monospace;font-size:18px;font-weight:500;
+ padding:12px 14px;width:100%;outline:none;text-align:right}
+.form-inp:focus{border-color:var(--green)}
+input[type=number].form-inp::-webkit-inner-spin-button{-webkit-appearance:none}
+.form-inp-lg{grid-column:1/-1;font-size:15px;font-family:'Inter',sans-serif;text-align:left;padding:13px 14px}
+.btn-primary{width:100%;padding:16px;background:var(--green);color:#07090f;font-weight:800;
+ font-size:16px;border:none;border-radius:16px;cursor:pointer;font-family:'Syne',sans-serif;
+ letter-spacing:.02em;transition:.15s;box-shadow:0 4px 20px var(--green-glow)}
+.btn-primary:active{transform:scale(0.98);opacity:.9}
+.btn-danger{background:rgba(255,77,109,0.12);color:var(--red);border:1px solid rgba(255,77,109,0.2)}
+
+/* ===== 新聞 ===== */
+.news-filter{display:flex;gap:8px;padding:0 20px 16px;overflow-x:auto;scrollbar-width:none}
+.news-chip{padding:7px 16px;border-radius:20px;font-size:12px;font-weight:700;
+ border:1.5px solid var(--border);background:none;color:var(--muted);cursor:pointer;
+ white-space:nowrap;transition:.15s;font-family:'Inter',sans-serif}
+.news-chip.active{background:var(--green-dim);border-color:var(--green);color:var(--green)}
+.news-item{padding:16px 20px;border-bottom:1px solid var(--border2);cursor:pointer;transition:.1s;display:flex;gap:12px}
+.news-item:active{background:var(--card2)}
+.news-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;margin-top:5px}
+.dot-tw{background:var(--green)}.dot-us{background:#6366f1}.dot-fx{background:var(--amber)}
+.news-content{flex:1;min-width:0}
+.news-title{font-size:14px;color:var(--text);line-height:1.4;font-weight:500;margin-bottom:4px}
+.news-meta{font-size:11px;color:var(--muted)}
+
+/* ===== 工具 ===== */
+.tool-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;padding:0 20px}
+.tool-card{background:var(--card);border:1px solid var(--border);border-radius:18px;
+ padding:20px;cursor:pointer;transition:.15s;display:flex;flex-direction:column;gap:10px}
+.tool-card:active{background:var(--card2);transform:scale(0.98)}
+.tool-icon{font-size:28px;line-height:1}
+.tool-name{font-family:'Syne',sans-serif;font-size:16px;font-weight:800;color:var(--text)}
+.tool-desc{font-size:11px;color:var(--muted);line-height:1.4}
+
+/* ===== 工具詳細面板 ===== */
+.tool-panel{display:none;position:fixed;inset:0;z-index:150;background:var(--bg);overflow-y:auto;padding-bottom:40px;animation:slideUp .25s cubic-bezier(.4,0,.2,1)}
+.tool-panel.open{display:block}
+@keyframes slideUp{from{transform:translateY(100%)}to{transform:translateY(0)}}
+.panel-header{padding:20px 20px 0;display:flex;align-items:center;gap:14px;position:sticky;top:0;background:var(--bg);z-index:10;padding-bottom:16px;border-bottom:1px solid var(--border2)}
+.panel-back{width:36px;height:36px;border-radius:10px;background:var(--card);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0}
+.panel-back svg{width:16px;height:16px;stroke:var(--muted);stroke-width:2.5}
+.panel-title{font-family:'Syne',sans-serif;font-size:20px;font-weight:900}
+.panel-body{padding:20px}
+
+/* 結果卡 */
+.result-card{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:16px;margin-bottom:12px}
+.result-label{font-size:10px;font-weight:700;color:var(--muted);letter-spacing:.08em;text-transform:uppercase;margin-bottom:6px}
+.result-val{font-family:'DM Mono',monospace;font-size:28px;font-weight:500;color:var(--green)}
+.result-sub{font-size:12px;color:var(--muted);margin-top:4px}
+.result-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px}
+.result-mini{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:14px}
+.result-mini .r-label{font-size:10px;color:var(--muted);font-weight:600;margin-bottom:5px;letter-spacing:.05em;text-transform:uppercase}
+.result-mini .r-val{font-family:'DM Mono',monospace;font-size:20px;color:var(--text);font-weight:500}
+
+/* 匯率行 */
+.fx-row{display:flex;align-items:center;padding:14px 0;border-bottom:1px solid var(--border2)}
+.fx-row:last-child{border:none}
+.fx-flag{font-size:22px;width:32px;flex-shrink:0}
+.fx-info{flex:1}
+.fx-code{font-family:'DM Mono',monospace;font-size:14px;color:var(--text);font-weight:500}
+.fx-name{font-size:11px;color:var(--muted)}
+.fx-amount{font-family:'DM Mono',monospace;font-size:18px;color:var(--green);font-weight:500}
+
+/* 停損停利 */
+.alert-item{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:14px 16px;margin-bottom:10px;display:flex;align-items:center;gap:12px}
+.alert-color{width:4px;height:44px;border-radius:2px;flex-shrink:0}
+.alert-info{flex:1}
+.alert-code{font-family:'DM Mono',monospace;font-size:15px;font-weight:500;color:var(--text)}
+.alert-levels{font-size:11px;color:var(--muted);margin-top:3px}
+
+/* 筆記 */
+.note-item{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:14px 16px;margin:0 0 10px;display:flex;align-items:flex-start;gap:12px}
+.note-pin{color:var(--amber);flex-shrink:0;font-size:16px;cursor:pointer;padding-top:2px}
+.note-pin.off{color:var(--muted2)}
+.note-text{flex:1;font-size:14px;color:var(--text);line-height:1.5}
+.note-time{font-size:10px;color:var(--muted);margin-top:4px}
+.note-del{color:var(--muted2);cursor:pointer;font-size:18px;flex-shrink:0;background:none;border:none;padding:0}
+
+/* 歷史 */
+.hist-item{background:var(--card);border-radius:14px;padding:14px 16px;margin-bottom:10px;display:flex;gap:12px;border:1px solid var(--border)}
+.hist-line{width:3px;border-radius:2px;flex-shrink:0;align-self:stretch}
+.hist-content{flex:1}
+.hist-time{font-size:10px;color:var(--muted);margin-bottom:4px}
+.hist-main{font-family:'DM Mono',monospace;font-size:13px;color:var(--text)}
+.hist-roi{font-size:13px;font-weight:600;margin-top:2px}
+
+/* toast */
+#toast{position:fixed;top:20px;left:50%;transform:translateX(-50%) translateY(-80px);
+ background:var(--green);color:#07090f;padding:10px 22px;border-radius:20px;
+ font-weight:700;font-size:13px;z-index:9999;transition:transform .3s;pointer-events:none;
+ white-space:nowrap;font-family:'Inter',sans-serif;box-shadow:0 4px 20px var(--green-glow)}
+#toast.show{transform:translateX(-50%) translateY(0)}
+
+/* chart wrapper */
+canvas{display:block}
+
+/* empty state */
+.empty{text-align:center;padding:48px 20px;color:var(--muted)}
+.empty-icon{font-size:40px;margin-bottom:12px;opacity:.5}
+.empty-text{font-size:14px}
+
+/* section divider */
+.section-label{font-size:10px;font-weight:700;color:var(--muted);letter-spacing:.1em;text-transform:uppercase;padding:16px 20px 8px}
+
+/* settings */
+.setting-row{display:flex;justify-content:space-between;align-items:center;padding:16px 20px;border-bottom:1px solid var(--border2)}
+.setting-left .s-title{font-size:15px;color:var(--text);font-weight:500}
+.setting-left .s-desc{font-size:11px;color:var(--muted);margin-top:2px}
+.toggle{width:48px;height:26px;background:var(--muted2);border-radius:13px;
+ cursor:pointer;position:relative;transition:.25s;border:none;flex-shrink:0}
+.toggle.on{background:var(--green)}
+.toggle::after{content:'';position:absolute;width:20px;height:20px;background:#fff;
+ border-radius:50%;top:3px;left:3px;transition:.25s;box-shadow:0 1px 4px rgba(0,0,0,.3)}
+.toggle.on::after{left:25px}
+.size-btns{display:flex;gap:6px}
+.size-btn{padding:6px 14px;border-radius:10px;border:1.5px solid var(--border);
+ background:none;color:var(--muted);cursor:pointer;transition:.15s;font-family:'Inter',sans-serif}
+.size-btn.active{border-color:var(--green);color:var(--green);background:var(--green-dim)}
+.theme-dots{display:flex;gap:10px}
+.t-dot{width:28px;height:28px;border-radius:50%;cursor:pointer;border:3px solid transparent;transition:.2s}
+.t-dot.active{border-color:#fff;transform:scale(1.15)}
+
+/* 動態 */
+.pulse{animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.5}}
+</style>
+</head>
+<body>
+<div id="toast"></div>
+
+<nav class="nav">
+ <button class="nav-btn active" onclick="goPage('home',this)">
+   <svg fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>
+   <span>首頁</span>
+ </button>
+ <button class="nav-btn" onclick="goPage('watch',this)">
+   <svg fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
+   <span>追蹤</span>
+ </button>
+ <button class="nav-btn" onclick="goPage('news',this)">
+   <svg fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2m-4-3H9M7 16h6M7 8h6v4H7V8z"/></svg>
+   <span>新聞</span>
+ </button>
+ <button class="nav-btn" onclick="goPage('tools',this)">
+   <svg fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"/></svg>
+   <span>工具</span>
+ </button>
+ <button class="nav-btn" onclick="goPage('settings',this)">
+   <svg fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
+   <span>我的</span>
+ </button>
+</nav>
+
+<div id="page-home" class="page active">
+ <div class="home-header">
+   <div class="brand">Winner<span>Flow</span></div>
+   <div class="header-actions">
+     <div class="icon-btn" onclick="syncMarket()" id="sync-btn" title="同步">
+       <svg id="sync-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+     </div>
+     <div class="icon-btn" onclick="openSettings()" title="設定">
+       <svg fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+     </div>
+   </div>
+ </div>
+
+ <div class="hero">
+   <div class="hero-label">總資產估值</div>
+   <div class="hero-value" id="hero-value">NT$0</div>
+   <div class="hero-sub">
+     <span>帳面損益</span>
+     <span id="hero-badge" class="badge-up">+0.00%</span>
+   </div>
+   <div style="font-size:11px;color:var(--muted);margin-top:8px" id="sync-time">即將自動更新...</div>
+ </div>
+
+ <div class="ticker-wrap">
+   <div class="ticker-inner" id="ticker">
+     <div class="ticker-item"><span class="t-name">台加權</span><span id="t-tw">--</span></div>
+     <div class="ticker-item"><span class="t-name">道瓊</span><span id="t-dow">--</span></div>
+     <div class="ticker-item"><span class="t-name">那斯達克</span><span id="t-nas">--</span></div>
+     <div class="ticker-item"><span class="t-name">S&P500</span><span id="t-sp">--</span></div>
+     <div class="ticker-item"><span class="t-name">USD/TWD</span><span id="t-fx">--</span></div>
+     <div class="ticker-item"><span class="t-name">台加權</span><span id="t-tw2">--</span></div>
+     <div class="ticker-item"><span class="t-name">道瓊</span><span id="t-dow2">--</span></div>
+     <div class="ticker-item"><span class="t-name">那斯達克</span><span id="t-nas2">--</span></div>
+     <div class="ticker-item"><span class="t-name">S&P500</span><span id="t-sp2">--</span></div>
+     <div class="ticker-item"><span class="t-name">USD/TWD</span><span id="t-fx2">--</span></div>
+   </div>
+ </div>
+
+ <div class="cards">
+   <div class="card">
+     <div class="card-header">
+       <span class="card-title">核心部位</span>
+       <span class="card-action" onclick="openEditMain()">編輯</span>
+     </div>
+     <div class="card-body">
+       <div class="stat-grid">
+         <div class="stat-box">
+           <div class="s-label">0050 帳面獲利</div>
+           <div class="s-val green" id="c-profit">--</div>
+           <div class="s-sub" id="c-roi">ROI --</div>
+         </div>
+         <div class="stat-box">
+           <div class="s-label">QQQ 庫存(TWD)</div>
+           <div class="s-val" id="c-qqq-twd">--</div>
+           <div class="s-sub" id="c-qqq-usd">USD --</div>
+         </div>
+         <div class="stat-box">
+           <div class="s-label">本季可導流</div>
+           <div class="s-val green" id="c-transfer">--</div>
+           <div class="s-sub">USD 導出</div>
+         </div>
+         <div class="stat-box">
+           <div class="s-label">未來資產預估</div>
+           <div class="s-val" id="c-future">--</div>
+           <div class="s-sub" id="c-future-yrs">--年後</div>
+         </div>
+       </div>
+     </div>
+     <div class="margin-bar-wrap">
+       <div class="margin-bar-labels">
+         <span>安全邊際</span>
+         <span id="c-margin-pct" style="color:var(--green)">--%</span>
+       </div>
+       <div class="margin-bar-track">
+         <div class="margin-bar-fill" id="c-margin-bar" style="width:0%"></div>
+       </div>
+     </div>
+   </div>
+
+   <div class="card">
+     <div class="card-header"><span class="card-title">資產成長預測</span></div>
+     <div class="chart-wrap"><canvas id="growthChart"></canvas></div>
+   </div>
+
+   <div class="card">
+     <div class="card-header">
+       <span class="card-title">自選股</span>
+       <span class="card-action" onclick="goPage('watch',document.querySelector('[onclick*=watch]'))">查看全部</span>
+     </div>
+     <div class="card-body" id="home-watchlist"><div class="empty" style="padding:16px 0"><div class="empty-text">前往追蹤頁新增股票</div></div></div>
+   </div>
+ </div>
+
+ <div class="form-sheet" id="form-main">
+   <div class="form-inner">
+     <div class="form-title">
+       <span>核心部位設定</span>
+       <button class="form-close" onclick="closeForm('form-main')">×</button>
+     </div>
+     <div class="form-grid">
+       <div>
+         <label class="form-label">0050 均價</label>
+         <input id="cost_price" type="number" class="form-inp" value="48" oninput="safeCalc()">
+       </div>
+       <div>
+         <label class="form-label">0050 市價</label>
+         <input id="current_price" type="number" class="form-inp" style="color:var(--green)" value="77" oninput="safeCalc()">
+       </div>
+       <div>
+         <label class="form-label">持有股數</label>
+         <input id="shares" type="number" class="form-inp" value="1602" oninput="safeCalc()">
+       </div>
+       <div>
+         <label class="form-label">匯率 USD/TWD</label>
+         <input id="fx_rate" type="number" class="form-inp" value="31.4" step="0.1" oninput="safeCalc()">
+       </div>
+       <div class="form-grid" style="grid-column:1/-1;gap:10px;padding:0">
+         <label class="form-label" style="grid-column:1/-1">QQQ 美金庫存</label>
+         <input id="qqq_now" type="number" class="form-inp form-inp-lg" style="grid-column:1/-1;font-size:24px;text-align:center" value="25660" oninput="safeCalc()">
+       </div>
+     </div>
+     <div class="slider-group" style="margin-bottom:16px">
+       <div class="slider-row"><span class="slider-label">導流火力</span><span class="slider-val" id="sv-ratio">25%</span></div>
+       <input type="range" id="transfer_ratio" min="0" max="100" value="25" oninput="safeCalc()">
+       <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:4px">
+         <div><div class="slider-row"><span class="slider-label" style="font-size:11px">年化</span><span class="slider-val" id="sv-ret" style="font-size:12px">11%</span></div><input type="range" id="expected_return" min="1" max="25" value="11" oninput="safeCalc()"></div>
+         <div><div class="slider-row"><span class="slider-label" style="font-size:11px">年限</span><span class="slider-val" id="sv-yrs" style="font-size:12px">5年</span></div><input type="range" id="years" min="1" max="30" value="5" oninput="safeCalc()"></div>
+       </div>
+     </div>
+     <button class="btn-primary" onclick="saveAndClose()">儲存</button>
+   </div>
+ </div>
+</div>
+
+<div id="page-watch" class="page">
+ <div class="page-header">
+   <div>
+     <div class="page-title">自選股</div>
+     <div class="page-subtitle">追蹤你的持倉損益</div>
+   </div>
+   <button class="add-fab" onclick="openAddStock()">
+     <svg fill="none" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/></svg>
+   </button>
+ </div>
+ <div id="watch-list"></div>
+
+ <div class="section-label">停損 / 停利提醒</div>
+ <div style="padding:0 20px">
+   <div id="alert-list-home"></div>
+   <button onclick="openAddAlert()" style="width:100%;padding:13px;background:var(--card);border:1.5px dashed var(--border);border-radius:14px;color:var(--muted);font-size:13px;font-weight:600;cursor:pointer;margin-bottom:16px">＋ 新增提醒</button>
+ </div>
+
+ <div class="section-label">計算歷史</div>
+ <div style="padding:0 20px" id="hist-list"></div>
+ <div style="padding:0 20px;margin-bottom:8px;display:flex;gap:8px">
+   <button onclick="saveHistory()" style="flex:1;padding:13px;background:var(--card);border:1px solid var(--border);border-radius:14px;color:var(--muted);font-size:13px;font-weight:600;cursor:pointer">📈 儲存當前紀錄</button>
+   <button onclick="exportCSV()" style="flex:1;padding:13px;background:var(--card);border:1px solid var(--border);border-radius:14px;color:var(--muted);font-size:13px;font-weight:600;cursor:pointer">📤 匯出 CSV</button>
+ </div>
+</div>
+
+<div class="form-sheet" id="form-stock">
+ <div class="form-inner">
+   <div class="form-title"><span>新增股票</span><button class="form-close" onclick="closeForm('form-stock')">×</button></div>
+   <div style="margin-bottom:12px">
+     <label class="form-label">搜尋股票（點選後帶入）</label>
+     <input id="stock-search" class="form-inp form-inp-lg" placeholder="輸入代號或名稱..." oninput="doStockSearch()" onfocus="showAllStocks()" autocomplete="off">
+   </div>
+   <div id="stock-drop-list" style="background:var(--card2);border-radius:12px;max-height:180px;overflow-y:auto;margin-bottom:12px;display:none"></div>
+   <div class="form-grid">
+     <div><label class="form-label">成本均價</label><input id="s-cost" type="number" class="form-inp" placeholder="48"></div>
+     <div><label class="form-label">持有股數</label><input id="s-shares" type="number" class="form-inp" placeholder="1000"></div>
+   </div>
+   <input type="hidden" id="s-code"><input type="hidden" id="s-name">
+   <button class="btn-primary" onclick="addStock()">加入追蹤</button>
+ </div>
+</div>
+
+<div class="form-sheet" id="form-alert">
+ <div class="form-inner">
+   <div class="form-title"><span>停損停利設定</span><button class="form-close" onclick="closeForm('form-alert')">×</button></div>
+   <div style="margin-bottom:12px">
+     <label class="form-label">股票</label>
+     <input id="al-search" class="form-inp form-inp-lg" placeholder="輸入代號或名稱..." oninput="doAlertSearch()" onfocus="showAllAlerts()" autocomplete="off">
+   </div>
+   <div id="al-drop-list" style="background:var(--card2);border-radius:12px;max-height:160px;overflow-y:auto;margin-bottom:12px;display:none"></div>
+   <div class="form-grid">
+     <div><label class="form-label">目前價格</label><input id="al-cur" type="number" class="form-inp" placeholder="77"></div>
+     <div></div>
+     <div><label class="form-label" style="color:var(--green)">停利價 🟢</label><input id="al-tp" type="number" class="form-inp" style="color:var(--green)" placeholder="90"></div>
+     <div><label class="form-label" style="color:var(--red)">停損價 🔴</label><input id="al-sl" type="number" class="form-inp" style="color:var(--red)" placeholder="65"></div>
+   </div>
+   <input type="hidden" id="al-code">
+   <button class="btn-primary" onclick="addAlert()">設定提醒</button>
+ </div>
+</div>
+
+<div id="page-news" class="page">
+ <div class="page-header">
+   <div>
+     <div class="page-title">市場新聞</div>
+     <div class="page-subtitle" id="news-time">即時財經資訊</div>
+   </div>
+   <div class="icon-btn" onclick="loadNews()">
+     <svg fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+   </div>
+ </div>
+ <div class="news-filter">
+   <button class="news-chip active" onclick="filterNews('all',this)">全部</button>
+   <button class="news-chip" onclick="filterNews('tw',this)">🇹🇼 台股</button>
+   <button class="news-chip" onclick="filterNews('us',this)">🇺🇸 美股</button>
+   <button class="news-chip" onclick="filterNews('fx',this)">💱 匯率</button>
+ </div>
+ <div id="news-list"></div>
+</div>
+
+<div id="page-tools" class="page">
+ <div class="page-header"><div><div class="page-title">計算工具</div><div class="page-subtitle">投資輔助計算</div></div></div>
+ <div class="tool-grid">
+   <div class="tool-card" onclick="openTool('dca')"><div class="tool-icon">📅</div><div class="tool-name">定期定額</div><div class="tool-desc">試算複利成長與退休目標</div></div>
+   <div class="tool-card" onclick="openTool('dividend')"><div class="tool-icon">💰</div><div class="tool-name">股息試算</div><div class="tool-desc">殖利率與年度配息估算</div></div>
+   <div class="tool-card" onclick="openTool('tax')"><div class="tool-icon">🧮</div><div class="tool-name">稅務試算</div><div class="tool-desc">證交稅與股利所得稅比較</div></div>
+   <div class="tool-card" onclick="openTool('fx')"><div class="tool-icon">💹</div><div class="tool-name">多幣換算</div><div class="tool-desc">8種貨幣即時換算</div></div>
+   <div class="tool-card" onclick="openTool('notes')"><div class="tool-icon">📌</div><div class="tool-name">投資筆記</div><div class="tool-desc">記錄重要備忘與想法</div></div>
+   <div class="tool-card" onclick="takeSnapshot()"><div class="tool-icon">📸</div><div class="tool-name">資產快照</div><div class="tool-desc">截圖儲存當前狀態</div></div>
+ </div>
+</div>
+
+<div class="tool-panel" id="tool-dca">
+ <div class="panel-header"><div class="panel-back" onclick="closeTool('tool-dca')"><svg fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/></svg></div><div class="panel-title">📅 定期定額</div></div>
+ <div class="panel-body">
+   <div class="form-grid" style="margin-bottom:16px">
+     <div><label class="form-label">每月投入(TWD)</label><input id="dca-m" type="number" value="10000" class="form-inp" oninput="calcDCA()"></div>
+     <div><label class="form-label">年化報酬%</label><input id="dca-r" type="number" value="10" class="form-inp" oninput="calcDCA()"></div>
+     <div><label class="form-label">投資年限</label><input id="dca-y" type="number" value="20" class="form-inp" oninput="calcDCA()"></div>
+     <div><label class="form-label">已有本金</label><input id="dca-i" type="number" value="0" class="form-inp" oninput="calcDCA()"></div>
+     <div><label class="form-label">通膨率%</label><input id="dca-inf" type="number" value="2" class="form-inp" oninput="calcDCA()"></div>
+   </div>
+   <div class="result-grid">
+     <div class="result-mini"><div class="r-label">最終資產</div><div class="r-val" id="dca-final">--</div></div>
+     <div class="result-mini"><div class="r-label">實質資產</div><div class="r-val" id="dca-real">--</div></div>
+     <div class="result-mini"><div class="r-label">總投入</div><div class="r-val" id="dca-invest">--</div></div>
+     <div class="result-mini"><div class="r-label">複利獲利</div><div class="r-val" id="dca-gain" style="color:var(--green)">--</div></div>
+   </div>
+   <div style="height:180px;margin-top:12px"><canvas id="dcaChart"></canvas></div>
+ </div>
+</div>
+
+<div class="tool-panel" id="tool-dividend">
+ <div class="panel-header"><div class="panel-back" onclick="closeTool('tool-dividend')"><svg fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/></svg></div><div class="panel-title">💰 股息試算</div></div>
+ <div class="panel-body">
+   <div class="form-grid" style="margin-bottom:16px">
+     <div><label class="form-label">持有股數</label><input id="div-sh" type="number" value="1602" class="form-inp" oninput="calcDiv()"></div>
+     <div><label class="form-label">每股配息</label><input id="div-per" type="number" value="3.5" step="0.1" class="form-inp" oninput="calcDiv()"></div>
+     <div><label class="form-label">股票現價</label><input id="div-price" type="number" value="77" class="form-inp" oninput="calcDiv()"></div>
+     <div><label class="form-label">配息頻率</label>
+       <select id="div-freq" onchange="calcDiv()" class="form-inp" style="font-size:14px;text-align:left;font-family:'Inter',sans-serif">
+         <option value="1">年配</option><option value="2">半年</option><option value="4">季配</option><option value="12">月配</option>
+       </select>
+     </div>
+   </div>
+   <div class="result-card"><div class="result-label">年配息總額</div><div class="result-val" id="div-annual">--</div></div>
+   <div class="result-grid">
+     <div class="result-mini"><div class="r-label">月均配息</div><div class="r-val" id="div-monthly">--</div></div>
+     <div class="result-mini"><div class="r-label">殖利率</div><div class="r-val" id="div-yield">--</div></div>
+   </div>
+   <div class="result-card" style="background:rgba(255,77,109,0.06);border-color:rgba(255,77,109,0.15)"><div class="result-label">扣稅後(28%)年配息</div><div class="result-val" style="color:var(--red)" id="div-after">--</div><div class="result-sub">實際稅率依個人所得而異</div></div>
+ </div>
+</div>
+
+<div class="tool-panel" id="tool-tax">
+ <div class="panel-header"><div class="panel-back" onclick="closeTool('tool-tax')"><svg fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/></svg></div><div class="panel-title">🧮 稅務試算</div></div>
+ <div class="panel-body">
+   <div style="font-size:11px;font-weight:700;color:var(--green);letter-spacing:.06em;text-transform:uppercase;margin-bottom:10px">證券交易稅</div>
+   <div class="form-grid" style="margin-bottom:16px">
+     <div><label class="form-label">賣出金額(TWD)</label><input id="tax-sell" type="number" value="100000" class="form-inp" oninput="calcTax()"></div>
+     <div><label class="form-label">類型</label><select id="tax-type" onchange="calcTax()" class="form-inp" style="font-size:13px;text-align:left;font-family:'Inter',sans-serif"><option value="0.003">股票 0.3%</option><option value="0.001">ETF 0.1%</option></select></div>
+   </div>
+   <div class="result-card" style="margin-bottom:20px"><div class="result-label">應繳證交稅</div><div class="result-val" id="tax-stt">--</div></div>
+   <div style="font-size:11px;font-weight:700;color:var(--green);letter-spacing:.06em;text-transform:uppercase;margin-bottom:10px">股利所得稅</div>
+   <div class="form-grid" style="margin-bottom:12px">
+     <div><label class="form-label">全年股利(TWD)</label><input id="tax-div" type="number" value="50000" class="form-inp" oninput="calcTax()"></div>
+     <div><label class="form-label">綜所稅率</label><select id="tax-rate" onchange="calcTax()" class="form-inp" style="font-size:12px;text-align:left;font-family:'Inter',sans-serif"><option value="0.05">5%</option><option value="0.12">12%</option><option value="0.20" selected>20%</option><option value="0.30">30%</option><option value="0.40">40%</option></select></div>
+   </div>
+   <div class="result-grid">
+     <div class="result-mini"><div class="r-label">合併計稅</div><div class="r-val" id="tax-merge">--</div></div>
+     <div class="result-mini"><div class="r-label">分離課稅28%</div><div class="r-val" id="tax-sep">--</div></div>
+   </div>
+   <div style="margin-top:12px;padding:12px 16px;background:var(--card2);border-radius:12px;font-size:13px;color:var(--muted)">💡 建議選擇 <span id="tax-suggest" style="color:var(--amber);font-weight:700">計算中</span></div>
+ </div>
+</div>
+
+<div class="tool-panel" id="tool-fx">
+ <div class="panel-header"><div class="panel-back" onclick="closeTool('tool-fx')"><svg fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/></svg></div><div class="panel-title">💹 多幣換算</div></div>
+ <div class="panel-body">
+   <div class="form-grid" style="margin-bottom:20px">
+     <div class="form-grid" style="grid-column:1/-1;gap:10px;padding:0">
+       <div style="grid-column:1/-1;display:flex;gap:10px">
+         <input id="fx-amt" type="number" value="1000" class="form-inp" style="flex:1" oninput="calcFx()">
+         <select id="fx-base" onchange="calcFx()" class="form-inp" style="width:110px;font-size:14px;text-align:center;font-family:'DM Mono',monospace">
+           <option value="USD" selected>🇺🇸 USD</option><option value="TWD">🇹🇼 TWD</option>
+           <option value="JPY">🇯🇵 JPY</option><option value="EUR">🇪🇺 EUR</option>
+           <option value="GBP">🇬🇧 GBP</option><option value="HKD">🇭🇰 HKD</option>
+         </select>
+       </div>
+     </div>
+   </div>
+   <div id="fx-list"></div>
+   <div style="font-size:11px;color:var(--muted);text-align:center;margin-top:12px" id="fx-updated"></div>
+   <button onclick="loadFx()" style="width:100%;margin-top:12px;padding:13px;background:var(--card);border:1px solid var(--border);border-radius:14px;color:var(--green);font-size:13px;font-weight:700;cursor:pointer">🔄 更新即時匯率</button>
+ </div>
+</div>
+
+<div class="tool-panel" id="tool-notes">
+ <div class="panel-header"><div class="panel-back" onclick="closeTool('tool-notes')"><svg fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/></svg></div><div class="panel-title">📌 投資筆記</div></div>
+ <div class="panel-body">
+   <div style="display:flex;gap:10px;margin-bottom:16px">
+     <input id="note-inp" class="form-inp form-inp-lg" style="flex:1" placeholder="記錄想法..." onkeydown="if(event.key==='Enter')addNote()">
+     <button onclick="addNote()" style="padding:12px 18px;background:var(--green);color:#07090f;font-weight:800;border:none;border-radius:14px;cursor:pointer;font-size:20px;flex-shrink:0">＋</button>
+   </div>
+   <div id="notes-list"></div>
+ </div>
+</div>
+
+<div id="page-settings" class="page">
+ <div class="page-header"><div><div class="page-title">我的設定</div><div class="page-subtitle">個人化調整</div></div></div>
+ <div class="setting-row">
+   <div class="setting-left"><div class="s-title">深色 / 淺色模式</div><div class="s-desc">調整整體配色風格</div></div>
+   <button class="toggle" id="toggle-theme" onclick="toggleTheme()"></button>
+ </div>
+ <div class="setting-row">
+   <div class="setting-left"><div class="s-title">字體大小</div><div class="s-desc">選擇舒適的閱讀大小</div></div>
+   <div class="size-btns">
+     <button class="size-btn" onclick="setFs('14px',this)">小</button>
+     <button class="size-btn active" onclick="setFs('16px',this)">中</button>
+     <button class="size-btn" onclick="setFs('18px',this)">大</button>
+   </div>
+ </div>
+ <div class="setting-row" style="flex-direction:column;align-items:flex-start;gap:12px">
+   <div class="setting-left"><div class="s-title">主題顏色</div></div>
+   <div class="theme-dots">
+     <div class="t-dot active" style="background:#00d97e" onclick="setAccent('#00d97e','#6366f1',this)"></div>
+     <div class="t-dot" style="background:#3b82f6" onclick="setAccent('#3b82f6','#8b5cf6',this)"></div>
+     <div class="t-dot" style="background:#f43f5e" onclick="setAccent('#f43f5e','#f97316',this)"></div>
+     <div class="t-dot" style="background:#f59e0b" onclick="setAccent('#f59e0b','#10b981',this)"></div>
+     <div class="t-dot" style="background:#a855f7" onclick="setAccent('#a855f7','#ec4899',this)"></div>
+   </div>
+ </div>
+ <div class="setting-row" style="cursor:pointer" onclick="exportCSV()">
+   <div class="setting-left"><div class="s-title">匯出 CSV 報表</div><div class="s-desc">下載所有計算歷史紀錄</div></div>
+   <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" style="color:var(--muted)"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+ </div>
+ <div class="setting-row" style="cursor:pointer" onclick="takeSnapshot()">
+   <div class="setting-left"><div class="s-title">資產快照</div><div class="s-desc">截圖儲存當前畫面</div></div>
+   <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" style="color:var(--muted)"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+ </div>
+ <div class="setting-row" style="cursor:pointer" onclick="if(confirm('確定清除所有資料？')){localStorage.clear();location.reload()}">
+   <div class="setting-left"><div class="s-title" style="color:var(--red)">清除所有資料</div><div class="s-desc">重置所有設定與紀錄</div></div>
+   <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" style="color:var(--red)"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+ </div>
+ <div style="padding:24px 20px;text-align:center;color:var(--muted);font-size:11px">WinnerFlow v3.0 · 資料僅存在本機</div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+<script>
+// ===== 資料 =====
+var D={
+ cost:48,cur:77,shares:1602,fx:31.4,qqq:25660,
+ ratio:25,ret:11,yrs:5
+};
+var watchlist=JSON.parse(localStorage.getItem('wf_watch'))||[];
+var alertList=JSON.parse(localStorage.getItem('wf_alerts'))||[];
+var histList=JSON.parse(localStorage.getItem('wf_history'))||[];
+var noteList=JSON.parse(localStorage.getItem('wf_notes'))||[];
+var allNews=[],fxRates={};
+var myChart=null,dcaC=null;
+
+// ===== 設定 =====
+var isLight=localStorage.getItem('wf_lite')==='1';
+var currentFs=localStorage.getItem('wf_fs')||'16px';
+
+function applySettings(){
+ document.documentElement.style.setProperty('--fs',currentFs);
+ if(isLight){
+   document.documentElement.style.setProperty('--bg','#f4f7ff');
+   document.documentElement.style.setProperty('--surface','#edf1ff');
+   document.documentElement.style.setProperty('--card','#fff');
+   document.documentElement.style.setProperty('--card2','#f0f3ff');
+   document.documentElement.style.setProperty('--border','rgba(0,0,0,0.08)');
+   document.documentElement.style.setProperty('--border2','rgba(0,0,0,0.04)');
+   document.documentElement.style.setProperty('--text','#0a0f1e');
+   document.documentElement.style.setProperty('--muted','#5a6a8a');
+   document.documentElement.style.setProperty('--muted2','#aab5cc');
+ }else{
+   document.documentElement.style.setProperty('--bg','#07090f');
+   document.documentElement.style.setProperty('--surface','#0d1117');
+   document.documentElement.style.setProperty('--card','#131b27');
+   document.documentElement.style.setProperty('--card2','#1a2332');
+   document.documentElement.style.setProperty('--border','rgba(255,255,255,0.07)');
+   document.documentElement.style.setProperty('--border2','rgba(255,255,255,0.04)');
+   document.documentElement.style.setProperty('--text','#f0f4ff');
+   document.documentElement.style.setProperty('--muted','#5a6a8a');
+   document.documentElement.style.setProperty('--muted2','#3a4a65');
+ }
+ document.getElementById('toggle-theme').classList.toggle('on',isLight);
+}
+function toggleTheme(){isLight=!isLight;localStorage.setItem('wf_lite',isLight?'1':'0');applySettings();}
+function setFs(v,el){currentFs=v;localStorage.setItem('wf_fs',v);document.documentElement.style.setProperty('--fs',v);document.querySelectorAll('.size-btn').forEach(b=>b.classList.remove('active'));el.classList.add('active');}
+function setAccent(a,a2,el){
+ document.documentElement.style.setProperty('--green',a);
+ document.documentElement.style.setProperty('--green-dim','rgba('+hexToRgb(a)+',0.12)');
+ document.documentElement.style.setProperty('--green-glow','rgba('+hexToRgb(a)+',0.25)');
+ document.documentElement.style.setProperty('--accent2',a2);
+ localStorage.setItem('wf_accent',a);localStorage.setItem('wf_accent2',a2);
+ document.querySelectorAll('.t-dot').forEach(d=>d.classList.remove('active'));el.classList.add('active');
+}
+function hexToRgb(hex){var r=parseInt(hex.slice(1,3),16),g=parseInt(hex.slice(3,5),16),b=parseInt(hex.slice(5,7),16);return r+','+g+','+b;}
+applySettings();
+// 恢復主題顏色
+var sa=localStorage.getItem('wf_accent'),sa2=localStorage.getItem('wf_accent2');
+if(sa){document.documentElement.style.setProperty('--green',sa);document.documentElement.style.setProperty('--green-dim','rgba('+hexToRgb(sa)+',0.12)');document.documentElement.style.setProperty('--green-glow','rgba('+hexToRgb(sa)+',0.25)');if(sa2)document.documentElement.style.setProperty('--accent2',sa2);}
+// 恢復字體標示
+document.querySelectorAll('.size-btn').forEach(b=>{if(b.textContent==={14:'小',16:'中',18:'大'}[parseInt(currentFs)])b.classList.add('active');});
+
+// ===== Toast =====
+function toast(msg,clr){
+ var t=document.getElementById('toast');
+ t.textContent=msg;if(clr)t.style.background=clr;
+ t.classList.add('show');setTimeout(()=>{t.classList.remove('show');t.style.background='';},2500);
+}
+
+// ===== 導航 =====
+function goPage(name,btn){
+ document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+ document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
+ document.getElementById('page-'+name).classList.add('active');
+ if(btn)btn.classList.add('active');
+ if(name==='news')loadNews();
+ if(name==='watch'){renderWatch();renderAlerts();renderHist();}
+ if(name==='settings')applySettings();
+}
+
+// ===== 計算 =====
+function safeCalc(){
+ D.cost=parseFloat(document.getElementById('cost_price').value)||48;
+ D.cur=parseFloat(document.getElementById('current_price').value)||77;
+ D.shares=parseFloat(document.getElementById('shares').value)||1602;
+ D.fx=parseFloat(document.getElementById('fx_rate').value)||31.4;
+ D.qqq=parseFloat(document.getElementById('qqq_now').value)||25660;
+ D.ratio=parseFloat(document.getElementById('transfer_ratio').value)||25;
+ D.ret=parseFloat(document.getElementById('expected_return').value)||11;
+ D.yrs=parseInt(document.getElementById('years').value)||5;
+ document.getElementById('sv-ratio').textContent=D.ratio+'%';
+ document.getElementById('sv-ret').textContent=D.ret+'%';
+ document.getElementById('sv-yrs').textContent=D.yrs+'年';
+ localStorage.setItem('wf_d',JSON.stringify(D));
+ updateUI();
+}
+function updateUI(){
+ var profit=(D.cur-D.cost)*D.shares;
+ var totalTwd=D.cur*D.shares+D.qqq*D.fx;
+ var margin=(D.cur-D.cost)/D.cur;
+ var roi=((D.cur-D.cost)/D.cost*100);
+ var extractTwd=profit*(D.ratio/100);
+ var friction=extractTwd>0?(extractTwd*0.004425+850):0;
+ var netUsd=(extractTwd-friction>0)?(extractTwd-friction)/D.fx:0;
+ var principal=D.qqq+(margin>=0.1?netUsd:0);
+ var future=principal*Math.pow(1+(D.ret/100),D.yrs);
+ // 英雄區
+ document.getElementById('hero-value').textContent='NT$'+fmt(totalTwd);
+ var badge=document.getElementById('hero-badge');
+ badge.textContent=(roi>=0?'+':'')+roi.toFixed(2)+'%';
+ badge.className=roi>=0?'badge-up':'badge-down';
+ // 卡片
+ document.getElementById('c-profit').textContent=(profit>=0?'+':'-')+'NT$'+fmt(Math.abs(profit));
+ document.getElementById('c-profit').style.color=profit>=0?'var(--green)':'var(--red)';
+ document.getElementById('c-roi').textContent='ROI '+(roi>=0?'+':'')+roi.toFixed(1)+'%';
+ document.getElementById('c-qqq-twd').textContent='NT$'+fmt(D.qqq*D.fx);
+ document.getElementById('c-qqq-usd').textContent='USD '+fmt(D.qqq);
+ document.getElementById('c-transfer').textContent='$'+fmt(netUsd);
+ document.getElementById('c-future').textContent='$'+fmt(future);
+ document.getElementById('c-future-yrs').textContent=D.yrs+'年後預估';
+ document.getElementById('c-margin-pct').textContent=(margin*100).toFixed(1)+'%';
+ var bar=document.getElementById('c-margin-bar');
+ bar.style.width=Math.min(100,Math.max(0,margin*200))+'%';
+ bar.style.background=margin>=0.2?'var(--green)':margin>=0.1?'var(--amber)':'var(--red)';
+ // 圖
+ drawChart(principal,D.ret,D.yrs);
+ // 提醒靜默檢查
+ alertList.forEach(a=>{
+   if(a.code==='0050'&&!a.triggered){
+     if(a.tp&&D.cur>=a.tp){toast('🎯 0050 停利 '+a.tp+' 觸發！','var(--green)');a.triggered=true;}
+     if(a.sl&&D.cur<=a.sl){toast('⚠️ 0050 停損 '+a.sl+' 觸發！','var(--red)');a.triggered=true;}
+   }
+ });
+ localStorage.setItem('wf_alerts',JSON.stringify(alertList));
+}
+function drawChart(principal,ret,yrs){
+ if(typeof Chart==='undefined')return;
+ var lbls=[],dta=[];
+ for(var i=0;i<=yrs;i++){lbls.push('Y'+i);dta.push(Math.round(principal*Math.pow(1+(ret/100),i)));}
+ if(myChart)myChart.destroy();
+ var ctx=document.getElementById('growthChart').getContext('2d');
+ var g=ctx.createLinearGradient(0,0,0,120);
+ var accentColor=getComputedStyle(document.documentElement).getPropertyValue('--green').trim()||'#00d97e';
+ g.addColorStop(0,'rgba(0,217,126,0.2)');g.addColorStop(1,'transparent');
+ myChart=new Chart(ctx,{type:'line',data:{labels:lbls,datasets:[{data:dta,borderColor:accentColor,backgroundColor:g,fill:true,tension:0.4,borderWidth:2,pointRadius:0}]},options:{responsive:true,maintainAspectRatio:false,animation:{duration:600},plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>'$'+fmt(ctx.raw)}}},scales:{y:{display:false},x:{grid:{display:false},ticks:{color:'#5a6a8a',font:{size:10,family:'DM Mono'}}}}}});
+}
+
+function saveAndClose(){safeCalc();closeForm('form-main');toast('✅ 已儲存');}
+function openEditMain(){document.getElementById('form-main').classList.add('open');}
+function closeForm(id){document.getElementById(id).classList.remove('open');}
+
+// ===== fmt =====
+function fmt(n){var num=parseFloat(n);if(isNaN(num))return'0';return num.toLocaleString('en-US',{maximumFractionDigits:0});}
+
+// ===== 股票資料庫 =====
+var STOCKS=[
+ {code:'0050',name:'元大台灣50',type:'ETF'},{code:'0056',name:'元大高股息',type:'ETF'},
+ {code:'006208',name:'富邦台50',type:'ETF'},{code:'00878',name:'國泰永續高股息',type:'ETF'},
+ {code:'00919',name:'群益台灣精選高息',type:'ETF'},{code:'00929',name:'復華台灣科技優息',type:'ETF'},
+ {code:'00940',name:'元大台灣價值高息',type:'ETF'},{code:'00713',name:'元大台灣高息低波',type:'ETF'},
+ {code:'00900',name:'富邦特選高股息30',type:'ETF'},{code:'00881',name:'國泰台灣5G+',type:'ETF'},
+ {code:'00891',name:'中信關鍵半導體',type:'ETF'},{code:'2330',name:'台積電',type:'半導體'},
+ {code:'2317',name:'鴻海',type:'電子'},{code:'2454',name:'聯發科',type:'半導體'},
+ {code:'2308',name:'台達電',type:'電子'},{code:'2382',name:'廣達',type:'電腦'},
+ {code:'2357',name:'華碩',type:'電腦'},{code:'2379',name:'瑞昱',type:'半導體'},
+ {code:'2412',name:'中華電信',type:'電信'},{code:'2881',name:'富邦金',type:'金融'},
+ {code:'2882',name:'國泰金',type:'金融'},{code:'2884',name:'玉山金',type:'金融'},
+ {code:'2886',name:'兆豐金',type:'金融'},{code:'2891',name:'中信金',type:'金融'},
+ {code:'2892',name:'第一金',type:'金融'},{code:'2002',name:'中鋼',type:'鋼鐵'},
+ {code:'3008',name:'大立光',type:'光學'},{code:'3711',name:'日月光投控',type:'半導體'},
+ {code:'AAPL',name:'Apple 蘋果',type:'美股'},{code:'MSFT',name:'Microsoft',type:'美股'},
+ {code:'NVDA',name:'Nvidia 輝達',type:'美股'},{code:'GOOGL',name:'Alphabet',type:'美股'},
+ {code:'AMZN',name:'Amazon',type:'美股'},{code:'META',name:'Meta',type:'美股'},
+ {code:'TSLA',name:'Tesla',type:'美股'},{code:'TSM',name:'台積電ADR',type:'美股'},
+ {code:'QQQ',name:'Nasdaq 100 ETF',type:'美ETF'},{code:'SPY',name:'S&P 500 ETF',type:'美ETF'},
+ {code:'VOO',name:'Vanguard S&P500',type:'美ETF'},{code:'SOXX',name:'半導體ETF',type:'美ETF'},
+];
+function renderStockDrop(listId,q){
+ var el=document.getElementById(listId);
+ var res=q?STOCKS.filter(s=>s.code.toUpperCase().includes(q.toUpperCase())||s.name.includes(q)):STOCKS;
+ el.style.display=res.length?'block':'none';
+ el.innerHTML=res.slice(0,12).map(s=>`<div class="drop-item" onclick="pickStock('${s.code}','${s.name}','${listId}')"><span class="drop-item-code">${s.code}</span><span class="drop-item-name">${s.name}</span><span class="drop-item-type">${s.type}</span></div>`).join('');
+}
+function pickStock(code,name,listId){
+ if(listId==='stock-drop-list'){
+   document.getElementById('stock-search').value=code+' '+name;
+   document.getElementById('s-code').value=code;document.getElementById('s-name').value=name;
+ }else{
+   document.getElementById('al-search').value=code+' '+name;
+   document.getElementById('al-code').value=code;
+ }
+ document.getElementById(listId).style.display='none';
+}
+function showAllStocks(){renderStockDrop('stock-drop-list','');}
+function doStockSearch(){renderStockDrop('stock-drop-list',document.getElementById('stock-search').value);}
+function showAllAlerts(){renderStockDrop('al-drop-list','');}
+function doAlertSearch(){renderStockDrop('al-drop-list',document.getElementById('al-search').value);}
+
+// ===== 自選股 =====
+function openAddStock(){document.getElementById('stock-search').value='';document.getElementById('s-code').value='';document.getElementById('s-name').value='';document.getElementById('s-cost').value='';document.getElementById('s-shares').value='';document.getElementById('stock-drop-list').style.display='none';document.getElementById('form-stock').classList.add('open');}
+function addStock(){
+ var code=document.getElementById('s-code').value||document.getElementById('stock-search').value.split(' ')[0];
+ var name=document.getElementById('s-name').value||document.getElementById('stock-search').value.split(' ').slice(1).join(' ')||code;
+ var cost=parseFloat(document.getElementById('s-cost').value)||0;
+ var sh=parseFloat(document.getElementById('s-shares').value)||0;
+ if(!code){toast('請選擇股票','var(--red)');return;}
+ watchlist.push({code,name,cost,shares:sh,cur:cost});
+ localStorage.setItem('wf_watch',JSON.stringify(watchlist));
+ closeForm('form-stock');renderWatch();updateHomeWatch();toast('✅ 已加入 '+code);
+}
+function delStock(i){watchlist.splice(i,1);localStorage.setItem('wf_watch',JSON.stringify(watchlist));renderWatch();updateHomeWatch();}
+function renderWatch(){
+ var el=document.getElementById('watch-list');
+ if(!watchlist.length){el.innerHTML='<div class="empty"><div class="empty-icon">📊</div><div class="empty-text">點右上角 ＋ 新增追蹤股票</div></div>';return;}
+ el.innerHTML=watchlist.map((w,i)=>{
+   var profit=(w.cur-w.cost)*w.shares,roi=w.cost>0?((w.cur-w.cost)/w.cost*100):0,pos=roi>=0;
+   return`<div class="stock-item" onclick="">
+     <div class="stock-avatar">${w.code.slice(0,4)}</div>
+     <div class="stock-info"><div class="stock-code">${w.code}</div><div class="stock-name">${w.name}</div></div>
+     <div class="stock-right">
+       <div class="stock-roi ${pos?'roi-pos':'roi-neg'}">${pos?'+':''}${roi.toFixed(1)}%</div>
+       <div class="stock-profit">${pos?'+':'-'}NT$${fmt(Math.abs(profit))}</div>
+     </div>
+     <button onclick="event.stopPropagation();delStock(${i})" style="color:var(--muted2);background:none;border:none;font-size:18px;cursor:pointer;padding:4px;flex-shrink:0">×</button>
+   </div>`;
+ }).join('');
+}
+function updateHomeWatch(){
+ var el=document.getElementById('home-watchlist');
+ if(!watchlist.length){el.innerHTML='<div class="empty" style="padding:12px 0"><div class="empty-text" style="font-size:12px">前往追蹤頁新增股票</div></div>';return;}
+ el.innerHTML=watchlist.slice(0,3).map(w=>{
+   var roi=w.cost>0?((w.cur-w.cost)/w.cost*100):0,pos=roi>=0;
+   return`<div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--border2)">
+     <div><div style="font-family:'DM Mono',monospace;font-size:13px;color:var(--text)">${w.code}</div><div style="font-size:11px;color:var(--muted)">${w.name}</div></div>
+     <div style="font-family:'DM Mono',monospace;font-size:14px;color:${pos?'var(--green)':'var(--red)'};font-weight:500">${pos?'+':''}${roi.toFixed(1)}%</div>
+   </div>`;
+ }).join('');
+}
+
+// ===== 停損停利 =====
+function openAddAlert(){document.getElementById('al-search').value='';document.getElementById('al-code').value='';document.getElementById('al-cur').value='';document.getElementById('al-tp').value='';document.getElementById('al-sl').value='';document.getElementById('al-drop-list').style.display='none';document.getElementById('form-alert').classList.add('open');}
+function addAlert(){
+ var code=document.getElementById('al-code').value||document.getElementById('al-search').value.split(' ')[0];
+ var cur=parseFloat(document.getElementById('al-cur').value)||0;
+ var tp=parseFloat(document.getElementById('al-tp').value)||0;
+ var sl=parseFloat(document.getElementById('al-sl').value)||0;
+ if(!code){toast('請選擇股票','var(--red)');return;}
+ alertList.push({code,cur,tp,sl,triggered:false});
+ localStorage.setItem('wf_alerts',JSON.stringify(alertList));
+ closeForm('form-alert');renderAlerts();toast('✅ 已設定 '+code);
+}
+function delAlert(i){alertList.splice(i,1);localStorage.setItem('wf_alerts',JSON.stringify(alertList));renderAlerts();}
+function renderAlerts(){
+ var el=document.getElementById('alert-list-home');
+ if(!alertList.length){el.innerHTML='<div style="font-size:12px;color:var(--muted);padding:4px 0 12px">尚無提醒設定</div>';return;}
+ el.innerHTML=alertList.map((a,i)=>{
+   var hasTP=a.tp>0,hasSL=a.sl>0;
+   return`<div class="alert-item">
+     <div class="alert-color" style="background:${a.triggered?'var(--amber)':hasTP?'var(--green)':'var(--red)'}"></div>
+     <div class="alert-info"><div class="alert-code">${a.code}</div><div class="alert-levels">🟢 ${hasTP?a.tp:'未設'}   🔴 ${hasSL?a.sl:'未設'}${a.triggered?'   ⚡ 已觸發':''}</div></div>
+     <button onclick="delAlert(${i})" style="color:var(--muted2);background:none;border:none;font-size:18px;cursor:pointer">×</button>
+   </div>`;
+ }).join('');
+}
+
+// ===== 歷史 =====
+function saveHistory(){
+ histList.unshift({time:new Date().toLocaleString('zh-TW'),cost:D.cost,cur:D.cur,shares:D.shares,profit:(D.cur-D.cost)*D.shares,roi:((D.cur-D.cost)/D.cost*100).toFixed(1),qqq:D.qqq,fx:D.fx});
+ if(histList.length>50)histList.pop();
+ localStorage.setItem('wf_history',JSON.stringify(histList));
+ renderHist();toast('✅ 已儲存紀錄');
+}
+function delHist(i){histList.splice(i,1);localStorage.setItem('wf_history',JSON.stringify(histList));renderHist();}
+function renderHist(){
+ var el=document.getElementById('hist-list');
+ if(!histList.length){el.innerHTML='<div style="font-size:12px;color:var(--muted);padding:4px 0 12px">尚無紀錄</div>';return;}
+ el.innerHTML=histList.slice(0,10).map((h,i)=>{
+   var pos=parseFloat(h.roi)>=0;
+   return`<div class="hist-item">
+     <div class="hist-line" style="background:${pos?'var(--green)':'var(--red)'}"></div>
+     <div class="hist-content">
+       <div class="hist-time">${h.time}</div>
+       <div class="hist-main">0050 ${h.cost}→${h.cur}  股數 ${h.shares}</div>
+       <div class="hist-roi" style="color:${pos?'var(--green)':'var(--red)'}">${pos?'+':''}${fmt(h.profit)} TWD  (${h.roi}%)</div>
+     </div>
+     <button onclick="delHist(${i})" style="color:var(--muted2);background:none;border:none;font-size:18px;cursor:pointer;flex-shrink:0;align-self:flex-start">×</button>
+   </div>`;
+ }).join('');
+}
+function exportCSV(){
+ if(!histList.length){toast('尚無紀錄','var(--amber)');return;}
+ var rows=[['時間','均價','市價','股數','獲利TWD','ROI%','QQQ','匯率']];
+ histList.forEach(h=>rows.push([h.time,h.cost,h.cur,h.shares,h.profit,h.roi,h.qqq,h.fx]));
+ var blob=new Blob(['\uFEFF'+rows.map(r=>r.join(',')).join('\n')],{type:'text/csv;charset=utf-8'});
+ var a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='WinnerFlow_'+new Date().toLocaleDateString('zh-TW').replace(/\//g,'-')+'.csv';a.click();toast('✅ CSV 已下載');
+}
+
+// ===== 工具 =====
+function openTool(name){var p=document.getElementById('tool-'+name);p.classList.add('open');if(name==='dca')calcDCA();if(name==='dividend')calcDiv();if(name==='tax')calcTax();if(name==='fx')calcFx();if(name==='notes')renderNotes();}
+function closeTool(id){document.getElementById(id).classList.remove('open');}
+function calcDCA(){
+ var m=parseFloat(document.getElementById('dca-m').value)||10000,r=(parseFloat(document.getElementById('dca-r').value)||10)/100;
+ var y=parseInt(document.getElementById('dca-y').value)||20,init=parseFloat(document.getElementById('dca-i').value)||0;
+ var inf=(parseFloat(document.getElementById('dca-inf').value)||2)/100;
+ var mr=r/12,n=y*12,fv=init*Math.pow(1+r,y)+m*(Math.pow(1+mr,n)-1)/mr;
+ var real=fv/Math.pow(1+inf,y),totalIn=init+m*n;
+ document.getElementById('dca-final').textContent='NT$'+fmt(fv);
+ document.getElementById('dca-real').textContent='NT$'+fmt(real);
+ document.getElementById('dca-invest').textContent='NT$'+fmt(totalIn);
+ document.getElementById('dca-gain').textContent='NT$'+fmt(fv-totalIn);
+ if(typeof Chart!=='undefined'){
+   var lbls=[],nom=[],rl=[];
+   for(var i=0;i<=y;i++){lbls.push('Y'+i);var ni=init*Math.pow(1+r,i)+m*12*(Math.pow(1+r,i)-1)/r;nom.push(ni);rl.push(ni/Math.pow(1+inf,i));}
+   if(dcaC)dcaC.destroy();
+   var ctx=document.getElementById('dcaChart').getContext('2d');
+   var g1=ctx.createLinearGradient(0,0,0,180);g1.addColorStop(0,'rgba(0,217,126,0.2)');g1.addColorStop(1,'transparent');
+   var g2=ctx.createLinearGradient(0,0,0,180);g2.addColorStop(0,'rgba(99,102,241,0.15)');g2.addColorStop(1,'transparent');
+   dcaC=new Chart(ctx,{type:'line',data:{labels:lbls,datasets:[{label:'名目',data:nom,borderColor:'#00d97e',backgroundColor:g1,fill:true,tension:0.4,borderWidth:2,pointRadius:0},{label:'實質',data:rl,borderColor:'#6366f1',backgroundColor:g2,fill:true,tension:0.4,borderWidth:1.5,pointRadius:0,borderDash:[4,3]}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{color:'#5a6a8a',font:{size:10}}}},scales:{y:{display:false},x:{grid:{display:false},ticks:{color:'#5a6a8a',font:{size:10,family:'DM Mono'}}}}}});
+ }
+}
+function calcDiv(){
+ var sh=parseFloat(document.getElementById('div-sh').value)||1602,per=parseFloat(document.getElementById('div-per').value)||3.5;
+ var freq=parseInt(document.getElementById('div-freq').value)||1,price=parseFloat(document.getElementById('div-price').value)||77;
+ var annual=sh*per*freq;
+ document.getElementById('div-annual').textContent='NT$'+fmt(annual);
+ document.getElementById('div-monthly').textContent='NT$'+fmt(annual/12);
+ document.getElementById('div-yield').textContent=(per*freq/price*100).toFixed(2)+'%';
+ document.getElementById('div-after').textContent='NT$'+fmt(annual*0.72);
+}
+function calcTax(){
+ var sell=parseFloat(document.getElementById('tax-sell').value)||0,rate=parseFloat(document.getElementById('tax-type').value)||0.003;
+ document.getElementById('tax-stt').textContent='NT$'+fmt(sell*rate);
+ var div=parseFloat(document.getElementById('tax-div').value)||0,ir=parseFloat(document.getElementById('tax-rate').value)||0.2;
+ var credit=div*0.085,merge=(div+credit)*ir-credit,sep=div*0.28;
+ document.getElementById('tax-merge').textContent='NT$'+fmt(Math.max(0,merge));
+ document.getElementById('tax-sep').textContent='NT$'+fmt(sep);
+ document.getElementById('tax-suggest').textContent=merge<sep?'合併計稅':'分離課稅28%';
+}
+var fxData={USD:1,TWD:31.4,JPY:150.2,EUR:0.92,GBP:0.79,HKD:7.82};
+function calcFx(){
+ var amt=parseFloat(document.getElementById('fx-amt').value)||1,base=document.getElementById('fx-base').value;
+ var baseRate=fxData[base]||1;
+ var CURR=[{code:'TWD',flag:'🇹🇼',name:'新台幣'},{code:'USD',flag:'🇺🇸',name:'美元'},{code:'JPY',flag:'🇯🇵',name:'日圓'},{code:'EUR',flag:'🇪🇺',name:'歐元'},{code:'GBP',flag:'🇬🇧',name:'英鎊'},{code:'HKD',flag:'🇭🇰',name:'港幣'},{code:'KRW',flag:'🇰🇷',name:'韓元'}];
+ if(!fxData.KRW)fxData.KRW=1340;
+ document.getElementById('fx-list').innerHTML=CURR.filter(c=>c.code!==base).map(c=>{
+   var r=fxData[c.code]||0,res=amt/baseRate*r;
+   var disp=(c.code==='KRW'||c.code==='JPY')?Math.round(res).toLocaleString():res.toFixed(2);
+   return`<div class="fx-row"><span class="fx-flag">${c.flag}</span><div class="fx-info"><div class="fx-code">${c.code}</div><div class="fx-name">${c.name}</div></div><div class="fx-amount">${disp}</div></div>`;
+ }).join('');
+}
+async function loadFx(){
+ try{var r=await Promise.race([fetch('https://api.exchangerate-api.com/v4/latest/USD'),new Promise((_,rj)=>setTimeout(()=>rj(),5000))]);var d=await r.json();fxData=d.rates;calcFx();document.getElementById('fx-updated').textContent='更新：'+new Date().toLocaleTimeString('zh-TW');toast('✅ 匯率已更新');}
+ catch{calcFx();toast('使用近似匯率','var(--amber)');}
+}
+
+// ===== 筆記 =====
+function addNote(){var v=document.getElementById('note-inp').value.trim();if(!v)return;noteList.unshift({text:v,time:new Date().toLocaleString('zh-TW'),pin:false});localStorage.setItem('wf_notes',JSON.stringify(noteList));document.getElementById('note-inp').value='';renderNotes();toast('✅ 已儲存');}
+function delNote(i){noteList.splice(i,1);localStorage.setItem('wf_notes',JSON.stringify(noteList));renderNotes();}
+function pinNote(i){noteList[i].pin=!noteList[i].pin;noteList.sort((a,b)=>(b.pin?1:0)-(a.pin?1:0));localStorage.setItem('wf_notes',JSON.stringify(noteList));renderNotes();}
+function renderNotes(){
+ var el=document.getElementById('notes-list');
+ if(!noteList.length){el.innerHTML='<div class="empty"><div class="empty-icon">📌</div><div class="empty-text">輸入後按 Enter 新增筆記</div></div>';return;}
+ el.innerHTML=noteList.map((n,i)=>`<div class="note-item">
+   <div class="note-pin ${n.pin?'':'off'}" onclick="pinNote(${i})">📌</div>
+   <div style="flex:1"><div class="note-text">${n.text}</div><div class="note-time">${n.time}</div></div>
+   <button class="note-del" onclick="delNote(${i})">×</button>
+ </div>`).join('');
+}
+
+// ===== 新聞 (優化版) =====
+var FALLBACK=[
+ {title:'【台股】加權指數震盪整理，半導體族群維持強勢',link:'https://tw.stock.yahoo.com',date:new Date().toISOString(),cat:'tw',dot:'dot-tw',src:'台股'},
+ {title:'【台股】0050 ETF法人持續買超，創規模新高',link:'https://tw.stock.yahoo.com',date:new Date(Date.now()-3600000).toISOString(),cat:'tw',dot:'dot-tw',src:'台股'},
+ {title:'【台股】台積電外資連買，目標價上調至1100元',link:'https://tw.stock.yahoo.com',date:new Date(Date.now()-7200000).toISOString(),cat:'tw',dot:'dot-tw',src:'台股'},
+ {title:'【美股】那斯達克指數創高，AI概念股全面上漲',link:'https://finance.yahoo.com',date:new Date(Date.now()-1800000).toISOString(),cat:'us',dot:'dot-us',src:'美股'},
+ {title:'【美股】QQQ資金淨流入達50億美元，科技股強勢',link:'https://finance.yahoo.com',date:new Date(Date.now()-5400000).toISOString(),cat:'us',dot:'dot-us',src:'美股'},
+ {title:'【美股】Fed維持利率不變，市場降息預期升溫',link:'https://finance.yahoo.com',date:new Date(Date.now()-9000000).toISOString(),cat:'us',dot:'dot-us',src:'美股'},
+ {title:'【匯率】新台幣小幅升值，外資匯入推升',link:'https://tw.stock.yahoo.com',date:new Date(Date.now()-2700000).toISOString(),cat:'fx',dot:'dot-fx',src:'匯率'},
+ {title:'【匯率】日圓持續弱勢，美元指數高檔整理',link:'https://tw.stock.yahoo.com',date:new Date(Date.now()-6300000).toISOString(),cat:'fx',dot:'dot-fx',src:'匯率'},
+];
+async function loadNews(){
+ var el=document.getElementById('news-list');
+ el.innerHTML='<div class="empty" style="padding:32px 0"><div class="empty-icon pulse">📡</div><div class="empty-text">載入新聞中...</div></div>';
+ allNews=[];
+ var parser=new DOMParser();
+ // 改用 raw 模式直接獲取 XML，避免 JSON 轉譯出錯
+ var SOURCES=[
+   {url:'https://api.allorigins.win/raw?url='+encodeURIComponent('https://tw.stock.yahoo.com/rss'),cat:'tw',dot:'dot-tw',src:'Yahoo台股'},
+   {url:'https://api.allorigins.win/raw?url='+encodeURIComponent('https://finance.yahoo.com/news/rssindex'),cat:'us',dot:'dot-us',src:'Yahoo美股'}
+ ];
+ for(var s of SOURCES){
+   try{
+     var res=await Promise.race([fetch(s.url),new Promise((_,r)=>setTimeout(()=>r(),6000))]);
+     var text=await res.text();
+     var xml=parser.parseFromString(text,'text/xml');
+     xml.querySelectorAll('item').forEach(item=>{
+       var title=item.querySelector('title')?.textContent?.trim()||'';
+       var link=item.querySelector('link')?.textContent?.trim()||'#';
+       var date=item.querySelector('pubDate')?.textContent||new Date().toISOString();
+       if(title&&title.length>5)allNews.push({title,link,date:new Date(date).toISOString(),cat:s.cat,dot:s.dot,src:s.src});
+     });
+   }catch(e){ console.log('News fetch error:', e); }
+ }
+ if(!allNews.length)allNews=[...FALLBACK];
+ allNews.sort((a,b)=>new Date(b.date)-new Date(a.date));
+ var n=new Date();
+ document.getElementById('news-time').textContent='更新 '+n.getHours()+':'+n.getMinutes().toString().padStart(2,'0')+(allNews.length>FALLBACK.length?' ✓':' (備用數據)');
+ filterNews('all',document.querySelector('.news-chip.active'));
+}
+var currentNewsFilter='all';
+function filterNews(cat,el){
+ currentNewsFilter=cat;
+ if(el){document.querySelectorAll('.news-chip').forEach(b=>b.classList.remove('active'));el.classList.add('active');}
+ var items=cat==='all'?allNews:allNews.filter(n=>n.cat===cat);
+ var cont=document.getElementById('news-list');
+ if(!items.length){cont.innerHTML='<div class="empty"><div class="empty-text">暫無此類新聞</div></div>';return;}
+ cont.innerHTML=items.map(n=>`<div class="news-item" onclick="window.open('${n.link}','_blank')">
+   <div class="news-dot ${n.dot}" style="margin-top:5px"></div>
+   <div class="news-content">
+     <div class="news-title">${n.title}</div>
+     <div class="news-meta">${n.src} · ${new Date(n.date).toLocaleString('zh-TW',{month:'numeric',day:'numeric',hour:'2-digit',minute:'2-digit'})}</div>
+   </div>
+ </div>`).join('');
+}
+
+// ===== 同步市場 (優化版) =====
+async function syncMarket(){
+ var icon=document.getElementById('sync-icon');
+ icon.style.animation='spin 1s linear infinite';
+ icon.style.transformOrigin='center';
+ if(!document.getElementById('spin-style')){
+   var style=document.createElement('style');style.id='spin-style';style.textContent='@keyframes spin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}';document.head.appendChild(style);
+ }
+ var fx=null,stk=null;
+ 
+ // 1. 匯率改用 Exchangerate-API (更穩定且沒有強烈 CORS 限制)
+ try{var r=await Promise.race([fetch('https://api.exchangerate-api.com/v4/latest/USD'),new Promise((_,rj)=>setTimeout(()=>rj(),5000))]);var d=await r.json();if(d&&d.rates)fx=d.rates.TWD;}catch(e){}
+ 
+ // 2. 台股 0050 (維持 TWSE 官方開放 API)
+ try{var r2=await Promise.race([fetch('https://openapi.twse.com.tw/v1/exchangeReport/STOCK_DAY_ALL'),new Promise((_,rj)=>setTimeout(()=>rj(),6000))]);var d2=await r2.json();for(var i=0;i<d2.length;i++){if(d2[i].Code==='0050'){stk=parseFloat(d2[i].ClosingPrice);break;}}}catch(e){}
+ 
+ if(fx){document.getElementById('fx_rate').value=fx.toFixed(2);D.fx=fx;fxData.TWD=fx;}
+ if(stk){document.getElementById('current_price').value=stk;D.cur=stk;watchlist.forEach(w=>{if(w.code==='0050')w.cur=stk;});localStorage.setItem('wf_watch',JSON.stringify(watchlist));}
+ 
+ // 3. 大盤指數改用 query2 加上 raw proxy
+ try{
+   var url='https://query2.finance.yahoo.com/v7/finance/quote?symbols=^TWII,^DJI,^IXIC,^GSPC';
+   var ri=await Promise.race([fetch('https://api.allorigins.win/raw?url='+encodeURIComponent(url)),new Promise((_,rj)=>setTimeout(()=>rj(),5000))]);
+   var di=await ri.json();
+   var results=di?.quoteResponse?.result||[];
+   var MAP={'^TWII':['t-tw','t-tw2'],'^DJI':['t-dow','t-dow2'],'^IXIC':['t-nas','t-nas2'],'^GSPC':['t-sp','t-sp2']};
+   results.forEach(res=>{
+     var ids=MAP[res.symbol];if(!ids)return;
+     var p=res.regularMarketPrice,c=res.regularMarketChangePercent,pos=c>=0;
+     var txt=(p>=1000?Math.round(p).toLocaleString():p.toFixed(2))+' '+(pos?'▲':'▼')+Math.abs(c).toFixed(2)+'%';
+     ids.forEach(id=>{var el=document.getElementById(id);if(el){el.textContent=txt;el.className=pos?'t-up':'t-dn';}});
+   });
+ }catch(e){ console.log('Index fetch error:', e); }
+
+ if(fx){var fxIds=['t-fx','t-fx2'];fxIds.forEach(id=>{var el=document.getElementById(id);if(el){el.textContent=fx.toFixed(2);el.className='t-up';}});}
+ 
+ updateUI();icon.style.animation='';
+ var n=new Date();document.getElementById('sync-time').textContent='最後更新 '+n.getHours()+':'+n.getMinutes().toString().padStart(2,'0');
+ if(fx||stk)toast('✅ 已同步最新數據');else toast('部分連線不穩定，請稍後再試','var(--amber)');
+}
+
+// ===== 快照 =====
+function takeSnapshot(){
+ toast('📸 產生快照...');
+ goPage('home',document.querySelector('.nav-btn'));
+ setTimeout(()=>{
+   if(typeof html2canvas==='undefined'){toast('快照功能載入中，請稍後再試','var(--amber)');return;}
+   html2canvas(document.getElementById('page-home'),{backgroundColor:isLight?'#f4f7ff':'#07090f',scale:2,useCORS:true}).then(c=>{var a=document.createElement('a');a.download='WinnerFlow_'+new Date().toLocaleDateString('zh-TW').replace(/\//g,'-')+'.png';a.href=c.toDataURL('image/png');a.click();toast('✅ 快照已下載！');}).catch(()=>toast('快照失敗','var(--red)'));
+ },400);
+}
+
+// ===== 初始化 =====
+function init(){
+ if('serviceWorker' in navigator)navigator.serviceWorker.getRegistrations().then(r=>r.forEach(x=>x.unregister()));
+ try{var saved=JSON.parse(localStorage.getItem('wf_d'));if(saved){Object.assign(D,saved);document.getElementById('cost_price').value=D.cost;document.getElementById('current_price').value=D.cur;document.getElementById('shares').value=D.shares;document.getElementById('fx_rate').value=D.fx;document.getElementById('qqq_now').value=D.qqq;document.getElementById('transfer_ratio').value=D.ratio;document.getElementById('expected_return').value=D.ret;document.getElementById('years').value=D.yrs;}}catch(e){}
+ 
+ updateUI();
+ renderWatch();
+ updateHomeWatch();
+ renderAlerts();
+ renderHist();
+ 
+ // 延遲 0.5 秒後自動觸發第一次同步，避免阻塞主畫面繪製
+ setTimeout(() => {
+   syncMarket();
+   loadNews();
+ }, 500);
+}
+init();
+// 關閉sheet點遮罩
+document.querySelectorAll('.form-sheet').forEach(s=>{s.addEventListener('click',e=>{if(e.target===s)s.classList.remove('open');});});
+</script>
+</body>
+</html>
