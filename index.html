@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>WinnerFlow 3.0</title>
+<title>WinnerFlow 3.1</title>
 
 <script src="https://cdn.tailwindcss.com"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -14,7 +14,6 @@ body{
   color:white;
   font-family:system-ui;
 }
-
 .glass{
   background:rgba(255,255,255,0.05);
   backdrop-filter:blur(12px);
@@ -22,23 +21,28 @@ body{
   border-radius:1.5rem;
   padding:1.5rem;
 }
-
 .big-number{
-  font-size:2.5rem;
+  font-size:2.2rem;
   font-weight:900;
 }
-
 .nav-btn{
   padding:8px 16px;
   border-radius:999px;
   background:#1e293b;
 }
-
 .nav-btn.active{
   background:#10b981;
   color:black;
 }
-
+input{
+  width:100%;
+  padding:8px;
+  background:#1e293b;
+  border-radius:8px;
+}
+button{
+  cursor:pointer;
+}
 </style>
 </head>
 
@@ -46,78 +50,73 @@ body{
 
 <!-- NAV -->
 <div class="flex gap-2 text-sm font-bold">
-<button onclick="switchTab('home')" class="nav-btn active">首頁</button>
-<button onclick="switchTab('control')" class="nav-btn">資產控制</button>
-<button onclick="switchTab('record')" class="nav-btn">成就系統</button>
+<button class="nav-btn active" onclick="switchTab(event,'home')">首頁</button>
+<button class="nav-btn" onclick="switchTab(event,'control')">資產控制</button>
+<button class="nav-btn" onclick="switchTab(event,'record')">成就系統</button>
 </div>
 
 <!-- HOME -->
 <div id="tab-home" class="space-y-6">
 
-<!-- 資產儀表 -->
 <div class="glass text-center">
-<canvas id="goalChart" height="160"></canvas>
-<div class="big-number mt-2" id="assetDisplay">--</div>
-<div id="todayDisplay" class="text-emerald-400 font-bold">--</div>
+<canvas id="goalCanvas" height="160"></canvas>
+<div class="big-number mt-2" id="assetDisplay">0</div>
+<div id="goalPercentDisplay" class="text-emerald-400 font-bold">達成 0%</div>
 </div>
 
-<!-- 壓力雷達 -->
 <div class="glass">
-<canvas id="stressRadar"></canvas>
+<canvas id="radarCanvas"></canvas>
 </div>
 
-<!-- 成長曲線 -->
 <div class="glass">
-<canvas id="growthChart"></canvas>
+<canvas id="growthCanvas"></canvas>
 </div>
 
-<!-- AI 建議 -->
 <div class="glass">
 <div class="text-sm text-slate-400">AI 戰略建議</div>
-<div id="aiAdvice" class="text-xl font-black mt-2 text-emerald-400"></div>
-<div class="mt-2 text-sm">風險等級：<span id="riskLevel"></span></div>
+<div id="aiAdvice" class="text-xl font-black mt-2 text-emerald-400">等待數據</div>
+<div class="mt-2 text-sm">風險等級：<span id="riskLevel">--</span></div>
 </div>
 
 </div>
 
 <!-- CONTROL -->
 <div id="tab-control" class="hidden space-y-6">
-
 <div class="glass space-y-4">
-<div class="grid grid-cols-2 gap-4">
-<input id="assetInput" type="number" placeholder="目前資產" class="p-2 bg-slate-800 rounded">
-<input id="goalInput" type="number" placeholder="目標資產" class="p-2 bg-slate-800 rounded">
-<input id="returnInput" type="number" placeholder="年化報酬 %" class="p-2 bg-slate-800 rounded">
-<input id="yearInput" type="number" placeholder="投資年限" class="p-2 bg-slate-800 rounded">
-</div>
+<input id="assetInput" type="number" placeholder="目前資產">
+<input id="goalInput" type="number" placeholder="目標資產">
+<input id="returnInput" type="number" placeholder="年化報酬 %">
+<input id="yearInput" type="number" placeholder="投資年限">
 <button onclick="calculate()" class="w-full bg-emerald-500 text-black py-2 rounded-xl font-bold">更新系統</button>
 </div>
-
 </div>
 
 <!-- RECORD -->
 <div id="tab-record" class="hidden">
 <div class="glass">
 <div class="text-lg font-bold mb-3">等級系統</div>
-<div id="levelDisplay"></div>
+<div id="levelDisplay">Lv.1</div>
 <ul id="achievements" class="mt-4 space-y-2 text-sm"></ul>
 </div>
 </div>
 
 <script>
-let goalChart, stressRadar, growthChart;
 
-function switchTab(tab){
+let goalChart=null;
+let radarChart=null;
+let growthChart=null;
+
+function switchTab(e,tab){
 document.querySelectorAll("[id^='tab-']").forEach(t=>t.classList.add("hidden"));
 document.getElementById("tab-"+tab).classList.remove("hidden");
 document.querySelectorAll(".nav-btn").forEach(b=>b.classList.remove("active"));
-event.target.classList.add("active");
+e.target.classList.add("active");
 }
 
 function animateNumber(id,value){
 let el=document.getElementById(id);
 let start=0;
-let duration=1000;
+let duration=800;
 let startTime=null;
 function step(timestamp){
 if(!startTime) startTime=timestamp;
@@ -139,29 +138,44 @@ localStorage.setItem("wf3",JSON.stringify({asset,goal,rate,years}));
 let percent=Math.min(100,(asset/goal)*100);
 
 animateNumber("assetDisplay",asset);
-todayDisplay.textContent="目標達成 "+percent.toFixed(1)+"%";
+goalPercentDisplay.textContent="達成 "+percent.toFixed(1)+"%";
 
 renderGoal(percent);
 renderRadar(asset,goal,years);
 renderGrowth(asset,rate,years);
-generateAI(asset,goal,years);
+generateAI(percent);
 updateLevel(asset);
 }
 
 function renderGoal(percent){
 if(goalChart) goalChart.destroy();
-goalChart=new Chart(goalChartCanvas,{
+goalChart=new Chart(
+document.getElementById("goalCanvas"),
+{
 type:"doughnut",
-data:{datasets:[{data:[percent,100-percent],backgroundColor:["#10b981","#1e293b"],borderWidth:0}]},
-options:{cutout:"75%",plugins:{legend:{display:false}}}
-});
+data:{
+datasets:[{
+data:[percent,100-percent],
+backgroundColor:["#10b981","#1e293b"],
+borderWidth:0
+}]
+},
+options:{
+cutout:"75%",
+plugins:{legend:{display:false}}
+}
+}
+);
 }
 
 function renderRadar(asset,goal,years){
-if(stressRadar) stressRadar.destroy();
+if(radarChart) radarChart.destroy();
 let concentration=Math.min(100,(asset/goal)*80);
-let timePressure=years*10;
-stressRadar=new Chart(stressRadarCanvas,{
+let timePressure=Math.min(100,years*10);
+
+radarChart=new Chart(
+document.getElementById("radarCanvas"),
+{
 type:"radar",
 data:{
 labels:["集中度","時間壓力","波動風險","現金比例","心理壓力"],
@@ -171,31 +185,48 @@ borderColor:"#10b981",
 backgroundColor:"rgba(16,185,129,0.2)"
 }]
 },
-options:{plugins:{legend:{display:false}},scales:{r:{grid:{color:"#334155"}}}}
-});
+options:{
+plugins:{legend:{display:false}},
+scales:{r:{grid:{color:"#334155"}}}
+}
+}
+);
 }
 
 function renderGrowth(asset,rate,years){
 if(growthChart) growthChart.destroy();
-let labels=[],data=[];
+let labels=[];
+let data=[];
 for(let i=0;i<=years;i++){
 labels.push("Y"+i);
 data.push(asset*Math.pow(1+rate,i));
 }
-growthChart=new Chart(growthChartCanvas,{
+growthChart=new Chart(
+document.getElementById("growthCanvas"),
+{
 type:"line",
-data:{labels:labels,datasets:[{data:data,borderColor:"#10b981",tension:0.3}]},
-options:{plugins:{legend:{display:false}},scales:{y:{display:false}}}
-});
+data:{
+labels:labels,
+datasets:[{
+data:data,
+borderColor:"#10b981",
+tension:0.3
+}]
+},
+options:{
+plugins:{legend:{display:false}},
+scales:{y:{display:false}}
+}
+}
+);
 }
 
-function generateAI(asset,goal,years){
-let ratio=asset/goal;
+function generateAI(percent){
 let advice="";
 let risk="";
-if(ratio<0.3){ advice="積極成長期，增加導流"; risk="低"; }
-else if(ratio<0.7){ advice="穩定推進，控制風險"; risk="中"; }
-else{ advice="接近目標，降低波動"; risk="高"; }
+if(percent<30){ advice="積極成長期"; risk="低"; }
+else if(percent<70){ advice="穩定推進"; risk="中"; }
+else{ advice="降低波動"; risk="高"; }
 aiAdvice.textContent=advice;
 riskLevel.textContent=risk;
 }
@@ -220,6 +251,7 @@ yearInput.value=saved.years;
 calculate();
 }
 };
+
 </script>
 
 </body>
