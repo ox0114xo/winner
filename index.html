@@ -64,13 +64,11 @@ body::before{content:'';position:fixed;inset:0;
 .hero-label{font-size:11px;font-weight:600;color:var(--muted);letter-spacing:.1em;text-transform:uppercase;margin-bottom:10px}
 .hero-value{
  font-family:'Syne',sans-serif;
- font-size:clamp(32px, 11vw, 52px);
+ font-size:clamp(24px, 9vw, 40px); /* 調降上限，適應長數字 */
  font-weight:900;
  line-height:1.1;
- white-space:nowrap;
- overflow:hidden;
- text-overflow:ellipsis;
  width:100%;
+ word-break: break-word; /* 徹底解除截斷，數字太長自然換行或縮放 */
  background:linear-gradient(135deg,#fff 0%,var(--green) 100%);
  -webkit-background-clip:text;
  -webkit-text-fill-color:transparent;
@@ -352,7 +350,7 @@ canvas{display:block}
      <div class="icon-btn" onclick="syncMarket()" id="sync-btn" title="同步">
        <svg id="sync-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
      </div>
-     <div class="icon-btn" onclick="openSettings()" title="設定">
+     <div class="icon-btn" onclick="goPage('settings', document.querySelectorAll('.nav-btn')[4])" title="設定">
        <svg fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
      </div>
    </div>
@@ -704,7 +702,7 @@ canvas{display:block}
    <div class="setting-left"><div class="s-title" style="color:var(--red)">清除所有資料</div><div class="s-desc">重置所有設定與紀錄</div></div>
    <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" style="color:var(--red)"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
  </div>
- <div style="padding:24px 20px;text-align:center;color:var(--muted);font-size:11px">WinnerFlow v3.0 · 資料僅存在本機</div>
+ <div style="padding:24px 20px;text-align:center;color:var(--muted);font-size:11px">WinnerFlow v3.1 · 資料僅存在本機</div>
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
@@ -832,14 +830,6 @@ function updateUI(){
  bar.style.background=margin>=0.2?'var(--green)':margin>=0.1?'var(--amber)':'var(--red)';
  // 圖
  drawChart(principal,D.ret,D.yrs);
- // 提醒靜默檢查
- alertList.forEach(a=>{
-   if(a.code==='0050'&&!a.triggered){
-     if(a.tp&&D.cur>=a.tp){toast('🎯 0050 停利 '+a.tp+' 觸發！','var(--green)');a.triggered=true;}
-     if(a.sl&&D.cur<=a.sl){toast('⚠️ 0050 停損 '+a.sl+' 觸發！','var(--red)');a.triggered=true;}
-   }
- });
- localStorage.setItem('wf_alerts',JSON.stringify(alertList));
 }
 function drawChart(principal,ret,yrs){
  if(typeof Chart==='undefined')return;
@@ -1131,7 +1121,7 @@ function filterNews(cat,el){
  </div>`).join('');
 }
 
-// ===== 同步市場 (優化版) =====
+// ===== 同步市場 (全自選股自動同步版) =====
 async function syncMarket(){
  var icon=document.getElementById('sync-icon');
  icon.style.animation='spin 1s linear infinite';
@@ -1139,37 +1129,90 @@ async function syncMarket(){
  if(!document.getElementById('spin-style')){
    var style=document.createElement('style');style.id='spin-style';style.textContent='@keyframes spin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}';document.head.appendChild(style);
  }
- var fx=null,stk=null;
  
- // 1. 匯率改用 Exchangerate-API (更穩定且沒有強烈 CORS 限制)
- try{var r=await Promise.race([fetch('https://api.exchangerate-api.com/v4/latest/USD'),new Promise((_,rj)=>setTimeout(()=>rj(),5000))]);var d=await r.json();if(d&&d.rates)fx=d.rates.TWD;}catch(e){}
+ var fx=null, stk=null;
+ var isSuccess = false;
  
- // 2. 台股 0050 (維持 TWSE 官方開放 API)
- try{var r2=await Promise.race([fetch('https://openapi.twse.com.tw/v1/exchangeReport/STOCK_DAY_ALL'),new Promise((_,rj)=>setTimeout(()=>rj(),6000))]);var d2=await r2.json();for(var i=0;i<d2.length;i++){if(d2[i].Code==='0050'){stk=parseFloat(d2[i].ClosingPrice);break;}}}catch(e){}
- 
- if(fx){document.getElementById('fx_rate').value=fx.toFixed(2);D.fx=fx;fxData.TWD=fx;}
- if(stk){document.getElementById('current_price').value=stk;D.cur=stk;watchlist.forEach(w=>{if(w.code==='0050')w.cur=stk;});localStorage.setItem('wf_watch',JSON.stringify(watchlist));}
- 
- // 3. 大盤指數改用 query2 加上 raw proxy
+ // 1. 匯率同步 (Exchangerate-API)
  try{
-   var url='https://query2.finance.yahoo.com/v7/finance/quote?symbols=^TWII,^DJI,^IXIC,^GSPC';
-   var ri=await Promise.race([fetch('https://api.allorigins.win/raw?url='+encodeURIComponent(url)),new Promise((_,rj)=>setTimeout(()=>rj(),5000))]);
-   var di=await ri.json();
-   var results=di?.quoteResponse?.result||[];
-   var MAP={'^TWII':['t-tw','t-tw2'],'^DJI':['t-dow','t-dow2'],'^IXIC':['t-nas','t-nas2'],'^GSPC':['t-sp','t-sp2']};
-   results.forEach(res=>{
-     var ids=MAP[res.symbol];if(!ids)return;
-     var p=res.regularMarketPrice,c=res.regularMarketChangePercent,pos=c>=0;
-     var txt=(p>=1000?Math.round(p).toLocaleString():p.toFixed(2))+' '+(pos?'▲':'▼')+Math.abs(c).toFixed(2)+'%';
-     ids.forEach(id=>{var el=document.getElementById(id);if(el){el.textContent=txt;el.className=pos?'t-up':'t-dn';}});
-   });
- }catch(e){ console.log('Index fetch error:', e); }
-
- if(fx){var fxIds=['t-fx','t-fx2'];fxIds.forEach(id=>{var el=document.getElementById(id);if(el){el.textContent=fx.toFixed(2);el.className='t-up';}});}
+   var r=await Promise.race([fetch('https://api.exchangerate-api.com/v4/latest/USD'),new Promise((_,rj)=>setTimeout(()=>rj(),5000))]);
+   var d=await r.json();
+   if(d&&d.rates){ fx=d.rates.TWD; isSuccess = true; }
+ }catch(e){ console.log('FX error:', e); }
  
- updateUI();icon.style.animation='';
- var n=new Date();document.getElementById('sync-time').textContent='最後更新 '+n.getHours()+':'+n.getMinutes().toString().padStart(2,'0');
- if(fx||stk)toast('✅ 已同步最新數據');else toast('部分連線不穩定，請稍後再試','var(--amber)');
+ // 2. 股市數據 (大盤 + 0050 + 所有自選股)
+ try{
+   // 輔助函式：判斷純數字代號自動補上 .TW (台股)，其餘當作美股
+   const getYahooSymbol = (code) => /^[0-9]{4,6}$/.test(code) ? code + '.TW' : code;
+   
+   // 整理所有需要抓取的代號 (去重複)
+   var baseSymbols = ['0050.TW', '^TWII', '^DJI', '^IXIC', '^GSPC'];
+   var watchSymbols = watchlist.map(w => getYahooSymbol(w.code));
+   var allSymbols = [...new Set([...baseSymbols, ...watchSymbols])];
+   
+   // 將代號串列組成 API 網址
+   var url='https://query1.finance.yahoo.com/v7/finance/spark?symbols=' + allSymbols.join(',');
+   var ri=await Promise.race([fetch('https://api.allorigins.win/raw?url='+encodeURIComponent(url)),new Promise((_,rj)=>setTimeout(()=>rj(),6000))]);
+   var di=await ri.json();
+   var results=di?.spark?.result||[];
+   
+   var MAP={'^TWII':['t-tw','t-tw2'],'^DJI':['t-dow','t-dow2'],'^IXIC':['t-nas','t-nas2'],'^GSPC':['t-sp','t-sp2']};
+   
+   results.forEach(res=>{
+     var sym=res.symbol;
+     var meta=res.response[0]?.meta;
+     if(!meta) return;
+     
+     var p = meta.regularMarketPrice;
+     var prev = meta.previousClose || meta.chartPreviousClose || p;
+     var c = ((p - prev) / prev) * 100;
+     var pos = c >= 0;
+     
+     // 更新核心部位 0050
+     if(sym === '0050.TW') { stk = p; isSuccess = true; }
+     
+     // 更新大盤跑馬燈
+     var ids = MAP[sym];
+     if(ids){
+       var txt=(p>=1000 ? Math.round(p).toLocaleString() : p.toFixed(2))+' '+(pos?'▲':'▼')+Math.abs(c).toFixed(2)+'%';
+       ids.forEach(id=>{var el=document.getElementById(id);if(el){el.textContent=txt;el.className=pos?'t-up':'t-dn';}});
+     }
+     
+     // 更新自選股清單價格
+     watchlist.forEach(w => {
+       if(getYahooSymbol(w.code) === sym) { w.cur = p; isSuccess = true; }
+     });
+     
+     // 檢查停損停利提醒 (包含 0050 與所有自選股)
+     alertList.forEach(a => {
+       if(getYahooSymbol(a.code) === sym && !a.triggered) {
+         if(a.tp && p >= a.tp){ toast('🎯 ' + a.code + ' 停利 '+a.tp+' 觸發！','var(--green)'); a.triggered = true; }
+         if(a.sl && p <= a.sl){ toast('⚠️ ' + a.code + ' 停損 '+a.sl+' 觸發！','var(--red)'); a.triggered = true; }
+       }
+     });
+   });
+ }catch(e){ console.log('Stock fetch error:', e); }
+
+ // 將新數據寫入畫面與 LocalStorage
+ if(fx){ document.getElementById('fx_rate').value=fx.toFixed(2); D.fx=fx; fxData.TWD=fx; }
+ if(fx){ var fxIds=['t-fx','t-fx2']; fxIds.forEach(id=>{var el=document.getElementById(id);if(el){el.textContent=fx.toFixed(2);el.className='t-up';}}); }
+ if(stk){ document.getElementById('current_price').value=stk; D.cur=stk; }
+ 
+ // 儲存陣列狀態並重新渲染畫面
+ localStorage.setItem('wf_watch', JSON.stringify(watchlist));
+ localStorage.setItem('wf_alerts', JSON.stringify(alertList));
+ 
+ updateUI();
+ renderWatch();
+ updateHomeWatch();
+ renderAlerts();
+ 
+ icon.style.animation='';
+ var n=new Date();
+ document.getElementById('sync-time').textContent='最後更新 '+n.getHours()+':'+n.getMinutes().toString().padStart(2,'0');
+ 
+ if(isSuccess) toast('✅ 市場數據已全面同步'); 
+ else toast('部分連線不穩定，請稍後再試','var(--amber)');
 }
 
 // ===== 快照 =====
