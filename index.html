@@ -1,727 +1,236 @@
 <!DOCTYPE html>
 <html lang="zh-TW">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>WinnerFlow 戰情室</title>
-    <link rel="apple-touch-icon" href="icon.png">
-    <link rel="icon" type="image/png" href="icon.png">
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
-    <style>
-        :root{--bg:#020617;--card:rgba(15,23,42,0.8);--border:rgba(255,255,255,0.05);--text:#f8fafc;--muted:#94a3b8}
-        body.light{--bg:#f1f5f9;--card:rgba(255,255,255,0.9);--border:rgba(0,0,0,0.08);--text:#0f172a;--muted:#64748b}
-        body{background:var(--bg);color:var(--text);font-family:system-ui,sans-serif;-webkit-tap-highlight-color:transparent;overflow-x:hidden;transition:background .3s,color .3s;min-height:100vh;padding:1rem}
-        body.light .glass{background:rgba(255,255,255,0.95);border-color:rgba(0,0,0,0.08)}
-        body.light .input-hero{background:rgba(241,245,249,0.9);border-color:#cbd5e1;color:#0f172a}
-        body.light .input-hero:focus{border-color:#10b981}
-        body.light .bg-slate-900\/50{background:rgba(241,245,249,0.8)}
-        body.light .text-slate-400{color:#475569}
-        body.light .text-slate-300{color:#334155}
-        body.light .text-slate-500{color:#64748b}
-        body.light .bg-slate-900{background:#e2e8f0}
-        body.light .border-slate-700{border-color:#cbd5e1}
-        body.light .bg-black{background:#f8fafc}
-        body.light .text-white{color:#0f172a}
-        .ambient-light-1{position:fixed;top:-10%;left:-10%;width:50vw;height:50vw;background:radial-gradient(circle,rgba(16,185,129,0.08) 0%,transparent 70%);filter:blur(60px);z-index:-1;pointer-events:none}
-        .glass{background:var(--card);backdrop-filter:blur(20px);border:1px solid var(--border);border-radius:2rem;box-shadow:0 10px 30px rgba(0,0,0,0.5)}
-        .input-hero{background:rgba(2,6,23,0.9);border:2px solid #334155;color:#fff;text-align:center;border-radius:16px;padding:14px;font-weight:900;font-size:1.3rem;width:100%;outline:none;transition:border-color .2s}
-        .input-hero:focus{border-color:#10b981}
-        input[type=range]{-webkit-appearance:none;background:transparent;height:40px}
-        input[type=range]::-webkit-slider-runnable-track{background:#1e293b;height:8px;border-radius:4px}
-        input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;height:26px;width:26px;border-radius:50%;background:#10b981;margin-top:-9px;border:3px solid #fff}
-        input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none}
-        .text-glow{text-shadow:0 0 15px currentColor}
-        /* 分頁 */
-        .tab-btn{padding:8px 16px;border-radius:12px;font-size:12px;font-weight:900;cursor:pointer;transition:.2s;border:none;background:transparent;color:#64748b;letter-spacing:.05em;text-transform:uppercase}
-        .tab-btn.active{background:#10b981;color:#000}
-        .tab-content{display:none}.tab-content.active{display:block}
-        /* 股票追蹤 */
-        .stock-row{background:rgba(15,23,42,0.6);border:1px solid rgba(255,255,255,0.05);border-radius:14px;padding:12px 16px;display:flex;align-items:center;gap:12px;margin-bottom:10px;position:relative}
-        body.light .stock-row{background:rgba(241,245,249,0.8);border-color:rgba(0,0,0,0.08)}
-        .stock-badge{font-size:10px;font-weight:900;padding:3px 8px;border-radius:6px;letter-spacing:.05em}
-        /* 停損停利 */
-        .alert-row{background:rgba(15,23,42,0.6);border:1px solid rgba(255,255,255,0.06);border-radius:12px;padding:12px;margin-bottom:8px}
-        body.light .alert-row{background:rgba(241,245,249,0.8);border-color:rgba(0,0,0,0.07)}
-        /* 歷史紀錄 */
-        .hist-row{background:rgba(15,23,42,0.5);border-left:3px solid #10b981;border-radius:0 10px 10px 0;padding:10px 14px;margin-bottom:8px;font-size:12px}
-        body.light .hist-row{background:rgba(241,245,249,0.9)}
-        /* Toast */
-        #toast{position:fixed;top:20px;left:50%;transform:translateX(-50%) translateY(-80px);background:#10b981;color:#000;padding:10px 22px;border-radius:20px;font-weight:900;font-size:13px;z-index:9999;transition:transform .3s;pointer-events:none}
-        #toast.show{transform:translateX(-50%) translateY(0)}
-        /* 新聞 */
-        .news-item{padding:12px;border-bottom:1px solid rgba(255,255,255,0.05);cursor:pointer;transition:.2s}
-        body.light .news-item{border-color:rgba(0,0,0,0.06)}
-        .news-item:hover{background:rgba(16,185,129,0.05)}
-        .news-source{font-size:10px;font-weight:700;padding:2px 7px;border-radius:5px;letter-spacing:.04em}
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>WinnerFlow 2.0</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<style>
+:root{
+  --accent:#10b981;
+  --bg:#0f172a;
+}
+body{
+  background:var(--bg);
+  color:white;
+  font-family:system-ui;
+}
+.card{
+  background:rgba(255,255,255,0.05);
+  border:1px solid rgba(255,255,255,0.08);
+  border-radius:1.5rem;
+  padding:1.5rem;
+}
+.kpi{
+  font-weight:900;
+  font-size:2.2rem;
+}
+.progress{
+  height:10px;
+  border-radius:10px;
+  overflow:hidden;
+  background:#1e293b;
+}
+.progress-bar{
+  height:100%;
+  background:var(--accent);
+}
+button{
+  transition:0.2s;
+}
+button:active{
+  transform:scale(0.95);
+}
+</style>
 </head>
-<body class="flex flex-col items-center">
-<div class="ambient-light-1"></div>
-<div id="toast"></div>
 
-<div class="w-full max-w-5xl space-y-5">
+<body class="p-4 max-w-5xl mx-auto space-y-6">
 
-  <!-- Header -->
-  <div class="flex flex-col md:flex-row justify-between items-center gap-4 px-2">
-    <div class="flex items-center gap-4">
-      <img src="icon.png" class="w-14 h-14 rounded-2xl border border-white/10" onerror="this.style.display='none'">
-      <div>
-        <h1 class="text-2xl font-black italic tracking-tighter text-white">WINNER<span class="text-emerald-400">FLOW</span></h1>
-        <p id="sync_status" class="text-[10px] font-bold text-emerald-500 uppercase tracking-widest mt-1">系統啟動成功</p>
-      </div>
-    </div>
-    <div class="flex gap-2 flex-wrap justify-center">
-      <button onclick="fetchMarketData()" class="bg-indigo-600 hover:bg-indigo-500 text-white px-5 py-3 rounded-xl font-black text-sm tracking-widest active:scale-95 transition-all border border-indigo-400/30">
-        <i id="f-icon" class="fa-solid fa-satellite-dish"></i> <span id="f-text">同步市場</span>
-      </button>
-      <button onclick="takeSnapshot()" class="bg-slate-700 hover:bg-slate-600 text-white px-5 py-3 rounded-xl font-black text-sm active:scale-95 transition-all border border-slate-500/30" title="資產快照">
-        <i class="fa-solid fa-camera"></i>
-      </button>
-      <button onclick="toggleTheme()" id="theme-btn" class="bg-slate-700 hover:bg-slate-600 text-white px-5 py-3 rounded-xl font-black text-sm active:scale-95 transition-all border border-slate-500/30" title="切換模式">
-        <i class="fa-solid fa-moon"></i>
-      </button>
-    </div>
-  </div>
+<!-- NAV -->
+<div class="flex gap-2 text-sm font-bold">
+<button onclick="switchTab('home')" class="px-4 py-2 rounded-xl bg-emerald-500 text-black">首頁</button>
+<button onclick="switchTab('invest')" class="px-4 py-2 rounded-xl bg-slate-700">投資管理</button>
+<button onclick="switchTab('analysis')" class="px-4 py-2 rounded-xl bg-slate-700">收益分析</button>
+<button onclick="switchTab('record')" class="px-4 py-2 rounded-xl bg-slate-700">紀錄成就</button>
+</div>
 
-  <!-- 分頁導覽 -->
-  <div class="glass px-4 py-3 flex gap-2 flex-wrap">
-    <button class="tab-btn active" onclick="switchTab('main')">⚡ 主控台</button>
-    <button class="tab-btn" onclick="switchTab('watchlist')">📊 股票追蹤</button>
-    <button class="tab-btn" onclick="switchTab('dca')">📅 定期定額</button>
-    <button class="tab-btn" onclick="switchTab('dividend')">💰 股息試算</button>
-    <button class="tab-btn" onclick="switchTab('alerts')">🎯 停損停利</button>
-    <button class="tab-btn" onclick="switchTab('news')">📰 市場新聞</button>
-    <button class="tab-btn" onclick="switchTab('history')">📈 歷史紀錄</button>
-  </div>
+<!-- HOME -->
+<div id="tab-home" class="space-y-6">
 
-  <!-- ===== 主控台 ===== -->
-  <div id="tab-main" class="tab-content active">
-    <div class="lg:flex gap-6 space-y-6 lg:space-y-0">
-      <div class="lg:w-[45%] space-y-6">
-        <div class="glass p-6 md:p-8 space-y-6 border-t border-emerald-500/20">
-          <div class="grid grid-cols-2 gap-4">
-            <div class="space-y-1">
-              <label class="text-[10px] font-black text-slate-400 block text-center uppercase">0050 均價</label>
-              <input type="number" id="cost_price" value="48" class="input-hero" oninput="safeCalculate()">
-            </div>
-            <div class="space-y-1 relative">
-              <label class="text-[10px] font-black text-slate-400 block text-center uppercase">0050 市價</label>
-              <input type="number" id="current_price" value="77" class="input-hero text-emerald-400 text-glow" oninput="safeCalculate()">
-              <span id="roi_badge" class="absolute -bottom-2 left-1/2 -translate-x-1/2 text-[9px] font-black px-2 py-0.5 rounded-full border border-slate-700 bg-black shadow-xl z-10">--%</span>
-            </div>
-            <div class="space-y-1">
-              <label class="text-[10px] font-black text-slate-400 block text-center uppercase">持有股數</label>
-              <input type="number" id="shares" value="1602" class="input-hero" oninput="safeCalculate()">
-            </div>
-            <div class="space-y-1">
-              <label class="text-[10px] font-black text-slate-400 block text-center uppercase">即時匯率</label>
-              <input type="number" id="fx_rate" value="31.4" step="0.1" class="input-hero text-indigo-400" oninput="safeCalculate()">
-            </div>
-          </div>
-          <div class="bg-slate-900/50 p-5 rounded-2xl border border-indigo-500/10">
-            <label class="text-[10px] font-black text-indigo-300 block mb-2 text-center uppercase tracking-widest">QQQ 美金庫存</label>
-            <input type="number" id="qqq_now" value="25660" class="w-full bg-transparent border-none text-white text-3xl font-black text-center focus:ring-0 outline-none" oninput="safeCalculate()">
-          </div>
-          <div class="space-y-4" ontouchstart="hideKeyboard()">
-            <div>
-              <div class="flex justify-between text-[11px] font-black text-slate-300 mb-1 uppercase">
-                <span>導流火力</span><span class="text-emerald-400 text-lg"><span id="ratio_val">25</span>%</span>
-              </div>
-              <input type="range" id="transfer_ratio" min="0" max="100" value="25" class="w-full" oninput="uiInteract();safeCalculate()">
-            </div>
-            <div class="grid grid-cols-2 gap-4">
-              <div><label class="text-[9px] font-black text-slate-500 block">年化 (<span id="ret_val">11</span>%)</label><input type="range" id="expected_return" min="1" max="25" value="11" class="w-full" oninput="uiInteract();safeCalculate()"></div>
-              <div><label class="text-[9px] font-black text-slate-500 block">年限 (<span id="yrs_val">5</span>年)</label><input type="range" id="years" min="1" max="30" value="5" class="w-full" oninput="uiInteract();safeCalculate()"></div>
-            </div>
-          </div>
-        </div>
-      </div>
-      <div class="lg:w-[55%] space-y-6" ontouchstart="hideKeyboard()">
-        <div class="glass p-6 md:p-8 space-y-6 h-full flex flex-col">
-          <div>
-            <div class="flex justify-between items-end mb-2">
-              <div>
-                <span class="text-[10px] font-black text-slate-500 uppercase tracking-widest">Price Margin</span>
-                <div id="out_margin_text" class="text-4xl font-black text-white mt-1">--</div>
-              </div>
-              <div id="alert_box" class="text-[10px] font-bold px-3 py-1.5 rounded-lg bg-slate-900 border border-slate-700 text-slate-400">系統重置中</div>
-            </div>
-            <div class="w-full bg-slate-900 h-1.5 rounded-full overflow-hidden mb-4">
-              <div id="margin_bar" class="h-full transition-all duration-500 bg-emerald-500" style="width:0%"></div>
-            </div>
-            <div class="grid grid-cols-2 gap-4">
-              <div class="bg-emerald-900/20 p-4 rounded-xl border border-emerald-500/10 text-center">
-                <span class="text-[9px] font-bold text-emerald-500/80 block mb-1 uppercase">本季淨導流</span>
-                <span id="out_transfer" class="text-xl font-black text-emerald-400">--</span>
-              </div>
-              <div class="bg-white/5 p-4 rounded-xl border border-white/5 text-center">
-                <span class="text-[9px] font-bold text-slate-400 block mb-1 uppercase">未來總資產</span>
-                <span id="out_future" class="text-xl font-black text-white">--</span>
-              </div>
-            </div>
-            <!-- 新增：總市值 -->
-            <div class="grid grid-cols-3 gap-3 mt-3">
-              <div class="bg-indigo-900/20 p-3 rounded-xl border border-indigo-500/10 text-center">
-                <span class="text-[9px] font-bold text-indigo-400 block mb-1">總市值(TWD)</span>
-                <span id="out_total_twd" class="text-sm font-black text-indigo-300">--</span>
-              </div>
-              <div class="bg-purple-900/20 p-3 rounded-xl border border-purple-500/10 text-center">
-                <span class="text-[9px] font-bold text-purple-400 block mb-1">帳面獲利</span>
-                <span id="out_profit" class="text-sm font-black text-purple-300">--</span>
-              </div>
-              <div class="bg-amber-900/20 p-3 rounded-xl border border-amber-500/10 text-center">
-                <span class="text-[9px] font-bold text-amber-400 block mb-1">QQQ(TWD)</span>
-                <span id="out_qqq_twd" class="text-sm font-black text-amber-300">--</span>
-              </div>
-            </div>
-          </div>
-          <div class="flex-grow min-h-[150px] relative mt-2">
-            <canvas id="growthChart"></canvas>
-          </div>
-          <div id="milestone" class="text-[10px] font-bold text-center py-3 px-4 rounded-xl bg-indigo-500/10 text-indigo-300 uppercase border border-indigo-500/20">資料計算中...</div>
-          <button onclick="saveHistory()" class="w-full py-2 rounded-xl text-[11px] font-black text-slate-400 border border-slate-700 hover:border-emerald-500 hover:text-emerald-400 transition-all">📈 儲存此次紀錄</button>
-        </div>
-      </div>
-    </div>
-  </div>
+<!-- KPI -->
+<div class="card space-y-4">
+<div>
+<div class="text-xs text-slate-400">總資產</div>
+<div id="totalAsset" class="kpi">--</div>
+</div>
 
-  <!-- ===== 股票追蹤 ===== -->
-  <div id="tab-watchlist" class="tab-content">
-    <div class="glass p-6 space-y-4">
-      <div class="flex justify-between items-center">
-        <h2 class="text-lg font-black text-white">📊 自選股追蹤</h2>
-        <span class="text-[10px] text-slate-400">點擊股票列可刪除</span>
-      </div>
-      <!-- 新增表單 -->
-      <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
-        <div><label class="text-[9px] font-black text-slate-500 block mb-1">股票代號</label><input id="w-code" class="input-hero text-base p-3" placeholder="0050"></div>
-        <div><label class="text-[9px] font-black text-slate-500 block mb-1">名稱</label><input id="w-name" class="input-hero text-base p-3" placeholder="元大台灣50"></div>
-        <div><label class="text-[9px] font-black text-slate-500 block mb-1">成本均價</label><input id="w-cost" type="number" class="input-hero text-base p-3" placeholder="48"></div>
-        <div><label class="text-[9px] font-black text-slate-500 block mb-1">持有股數</label><input id="w-shares" type="number" class="input-hero text-base p-3" placeholder="1000"></div>
-      </div>
-      <button onclick="addWatchStock()" class="w-full py-3 bg-emerald-600 hover:bg-emerald-500 text-black font-black rounded-xl text-sm transition-all active:scale-95">＋ 加入追蹤</button>
-      <div id="watchlist-rows">
-        <div class="text-center text-slate-500 text-sm py-8">尚無追蹤股票</div>
-      </div>
-    </div>
-  </div>
+<div>
+<div class="text-xs text-slate-400">今日損益</div>
+<div id="todayPnL" class="text-xl font-black text-emerald-400">--</div>
+</div>
 
-  <!-- ===== 定期定額 ===== -->
-  <div id="tab-dca" class="tab-content">
-    <div class="glass p-6 space-y-5">
-      <h2 class="text-lg font-black text-white">📅 定期定額試算</h2>
-      <div class="grid grid-cols-2 md:grid-cols-3 gap-4">
-        <div><label class="text-[9px] font-black text-slate-500 block mb-1">每月投入(TWD)</label><input id="dca-monthly" type="number" value="10000" class="input-hero text-base p-3" oninput="calcDCA()"></div>
-        <div><label class="text-[9px] font-black text-slate-500 block mb-1">預期年化報酬%</label><input id="dca-return" type="number" value="10" class="input-hero text-base p-3" oninput="calcDCA()"></div>
-        <div><label class="text-[9px] font-black text-slate-500 block mb-1">投資年限</label><input id="dca-years" type="number" value="20" class="input-hero text-base p-3" oninput="calcDCA()"></div>
-        <div><label class="text-[9px] font-black text-slate-500 block mb-1">已有本金(TWD)</label><input id="dca-init" type="number" value="0" class="input-hero text-base p-3" oninput="calcDCA()"></div>
-        <div><label class="text-[9px] font-black text-slate-500 block mb-1">通膨率%（選填）</label><input id="dca-inflation" type="number" value="2" class="input-hero text-base p-3" oninput="calcDCA()"></div>
-      </div>
-      <div class="grid grid-cols-2 md:grid-cols-4 gap-3" id="dca-results">
-        <div class="bg-emerald-900/20 p-4 rounded-xl border border-emerald-500/15 text-center"><div class="text-[9px] font-bold text-emerald-400 mb-1">最終資產(名目)</div><div id="dca-final" class="text-xl font-black text-emerald-300">--</div></div>
-        <div class="bg-indigo-900/20 p-4 rounded-xl border border-indigo-500/15 text-center"><div class="text-[9px] font-bold text-indigo-400 mb-1">最終資產(實質)</div><div id="dca-real" class="text-xl font-black text-indigo-300">--</div></div>
-        <div class="bg-purple-900/20 p-4 rounded-xl border border-purple-500/15 text-center"><div class="text-[9px] font-bold text-purple-400 mb-1">總投入本金</div><div id="dca-invest" class="text-xl font-black text-purple-300">--</div></div>
-        <div class="bg-amber-900/20 p-4 rounded-xl border border-amber-500/15 text-center"><div class="text-[9px] font-bold text-amber-400 mb-1">複利獲利</div><div id="dca-gain" class="text-xl font-black text-amber-300">--</div></div>
-      </div>
-      <div class="min-h-[200px] relative"><canvas id="dcaChart"></canvas></div>
-    </div>
-  </div>
+<div>
+<div class="flex justify-between text-xs mb-1">
+<span>目標達成率</span>
+<span id="goalPercent">--%</span>
+</div>
+<div class="progress">
+<div id="goalBar" class="progress-bar" style="width:0%"></div>
+</div>
+</div>
+</div>
 
-  <!-- ===== 股息試算 ===== -->
-  <div id="tab-dividend" class="tab-content">
-    <div class="glass p-6 space-y-5">
-      <h2 class="text-lg font-black text-white">💰 股息試算</h2>
-      <div class="grid grid-cols-2 md:grid-cols-3 gap-4">
-        <div><label class="text-[9px] font-black text-slate-500 block mb-1">持有股數</label><input id="div-shares" type="number" value="1602" class="input-hero text-base p-3" oninput="calcDividend()"></div>
-        <div><label class="text-[9px] font-black text-slate-500 block mb-1">每股配息(TWD)</label><input id="div-per" type="number" value="3.5" step="0.1" class="input-hero text-base p-3" oninput="calcDividend()"></div>
-        <div><label class="text-[9px] font-black text-slate-500 block mb-1">配息頻率</label>
-          <select id="div-freq" onchange="calcDividend()" class="input-hero text-base p-3" style="font-size:1rem;font-weight:700">
-            <option value="1">年配 1次</option>
-            <option value="2">半年 2次</option>
-            <option value="4">季配 4次</option>
-            <option value="12">月配 12次</option>
-          </select>
-        </div>
-        <div><label class="text-[9px] font-black text-slate-500 block mb-1">股票現價</label><input id="div-price" type="number" value="77" class="input-hero text-base p-3" oninput="calcDividend()"></div>
-        <div><label class="text-[9px] font-black text-slate-500 block mb-1">殖利率試算年限</label><input id="div-years" type="number" value="10" class="input-hero text-base p-3" oninput="calcDividend()"></div>
-        <div><label class="text-[9px] font-black text-slate-500 block mb-1">USD/TWD 匯率</label><input id="div-fx" type="number" value="31.4" step="0.1" class="input-hero text-base p-3" oninput="calcDividend()"></div>
-      </div>
-      <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
-        <div class="bg-emerald-900/20 p-4 rounded-xl border border-emerald-500/15 text-center"><div class="text-[9px] font-bold text-emerald-400 mb-1">年配息總額</div><div id="div-annual" class="text-xl font-black text-emerald-300">--</div></div>
-        <div class="bg-indigo-900/20 p-4 rounded-xl border border-indigo-500/15 text-center"><div class="text-[9px] font-bold text-indigo-400 mb-1">月均配息</div><div id="div-monthly" class="text-xl font-black text-indigo-300">--</div></div>
-        <div class="bg-amber-900/20 p-4 rounded-xl border border-amber-500/15 text-center"><div class="text-[9px] font-bold text-amber-400 mb-1">殖利率</div><div id="div-yield" class="text-xl font-black text-amber-300">--</div></div>
-        <div class="bg-purple-900/20 p-4 rounded-xl border border-purple-500/15 text-center"><div class="text-[9px] font-bold text-purple-400 mb-1">N年累積配息</div><div id="div-total" class="text-xl font-black text-purple-300">--</div></div>
-      </div>
-      <!-- 稅後 -->
-      <div class="bg-rose-900/10 border border-rose-500/15 rounded-xl p-4 text-center">
-        <div class="text-[10px] font-black text-rose-400 mb-1 uppercase">扣稅後年配息（股利所得稅 28%）</div>
-        <div id="div-after-tax" class="text-2xl font-black text-rose-300">--</div>
-        <div class="text-[10px] text-slate-500 mt-1">實際稅率依個人所得而異，僅供參考</div>
-      </div>
-    </div>
-  </div>
+<!-- 戰況卡 -->
+<div class="card space-y-3">
+<div class="text-sm font-bold">戰況分析</div>
+<div id="aiAdvice" class="text-lg font-black text-emerald-400">--</div>
+<div class="text-sm">
+投資壓力值：
+<span id="stressValue" class="font-black">--</span>
+</div>
+</div>
 
-  <!-- ===== 停損停利 ===== -->
-  <div id="tab-alerts" class="tab-content">
-    <div class="glass p-6 space-y-4">
-      <div class="flex justify-between items-center">
-        <h2 class="text-lg font-black text-white">🎯 停損 / 停利設定</h2>
-        <span class="text-[10px] text-slate-400">系統會定時提醒</span>
-      </div>
-      <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
-        <div><label class="text-[9px] font-black text-slate-500 block mb-1">股票代號</label><input id="al-code" class="input-hero text-base p-3" placeholder="0050"></div>
-        <div><label class="text-[9px] font-black text-slate-500 block mb-1">目前價格</label><input id="al-cur" type="number" class="input-hero text-base p-3" placeholder="77"></div>
-        <div><label class="text-[9px] font-black text-slate-500 block mb-1">停利價 🟢</label><input id="al-tp" type="number" class="input-hero text-base p-3 text-emerald-400" placeholder="90"></div>
-        <div><label class="text-[9px] font-black text-slate-500 block mb-1">停損價 🔴</label><input id="al-sl" type="number" class="input-hero text-base p-3 text-rose-400" placeholder="65"></div>
-      </div>
-      <button onclick="addAlert()" class="w-full py-3 bg-indigo-600 hover:bg-indigo-500 text-white font-black rounded-xl text-sm transition-all active:scale-95">＋ 新增提醒</button>
-      <div id="alert-rows">
-        <div class="text-center text-slate-500 text-sm py-8">尚無停損停利設定</div>
-      </div>
-      <!-- 手動檢查 -->
-      <button onclick="checkAlerts()" class="w-full py-2 rounded-xl border border-slate-700 text-slate-400 text-xs font-black hover:border-indigo-500 hover:text-indigo-400 transition-all">🔍 手動檢查所有提醒</button>
-    </div>
-  </div>
+<!-- 成長圖 -->
+<div class="card">
+<canvas id="growthChart" height="100"></canvas>
+</div>
 
-  <!-- ===== 新聞 ===== -->
-  <div id="tab-news" class="tab-content">
-    <div class="glass p-6 space-y-4">
-      <div class="flex justify-between items-center">
-        <h2 class="text-lg font-black text-white">📰 市場新聞</h2>
-        <button onclick="loadNews()" class="text-[11px] font-black text-indigo-400 border border-indigo-500/30 px-3 py-1.5 rounded-lg hover:bg-indigo-500/10 transition-all">重新整理</button>
-      </div>
-      <div class="flex gap-2 flex-wrap">
-        <button class="news-tab tab-btn active" onclick="filterNews('all')">全部</button>
-        <button class="news-tab tab-btn" onclick="filterNews('tw')">🇹🇼 台股</button>
-        <button class="news-tab tab-btn" onclick="filterNews('us')">🇺🇸 美股</button>
-        <button class="news-tab tab-btn" onclick="filterNews('fx')">💱 匯率</button>
-      </div>
-      <div id="news-container">
-        <div class="text-center text-slate-500 py-10"><i class="fa-solid fa-spinner fa-spin text-2xl mb-3 block"></i>載入新聞中...</div>
-      </div>
-    </div>
-  </div>
+</div>
 
-  <!-- ===== 歷史紀錄 ===== -->
-  <div id="tab-history" class="tab-content">
-    <div class="glass p-6 space-y-4">
-      <div class="flex justify-between items-center">
-        <h2 class="text-lg font-black text-white">📈 計算歷史紀錄</h2>
-        <button onclick="clearHistory()" class="text-[11px] font-black text-rose-400 border border-rose-500/30 px-3 py-1.5 rounded-lg hover:bg-rose-500/10 transition-all">清除全部</button>
-      </div>
-      <div id="history-rows">
-        <div class="text-center text-slate-500 text-sm py-8">尚無歷史紀錄</div>
-      </div>
-    </div>
-  </div>
+<!-- INVEST -->
+<div id="tab-invest" class="hidden space-y-6">
+<div class="card space-y-4">
+<div class="grid grid-cols-2 gap-4">
+<div>
+<label class="text-xs">持有資產</label>
+<input id="assetInput" type="number" class="w-full p-2 rounded bg-slate-800">
+</div>
+<div>
+<label class="text-xs">目標金額</label>
+<input id="goalInput" type="number" class="w-full p-2 rounded bg-slate-800">
+</div>
+<div>
+<label class="text-xs">預期年化 %</label>
+<input id="returnInput" type="number" class="w-full p-2 rounded bg-slate-800">
+</div>
+<div>
+<label class="text-xs">投資年限</label>
+<input id="yearInput" type="number" class="w-full p-2 rounded bg-slate-800">
+</div>
+</div>
+<button onclick="calculate()" class="w-full bg-emerald-500 text-black py-2 rounded-xl font-black">更新計算</button>
+</div>
+</div>
 
-</div><!-- end max-w -->
+<!-- ANALYSIS -->
+<div id="tab-analysis" class="hidden space-y-6">
+<div class="card">
+<div class="text-sm font-bold mb-3">股息試算</div>
+<input id="dividendInput" type="number" placeholder="輸入年度股息" class="w-full p-2 rounded bg-slate-800">
+<div class="mt-3 text-lg font-black" id="dividendAfterTax">--</div>
+</div>
+</div>
+
+<!-- RECORD -->
+<div id="tab-record" class="hidden space-y-6">
+<div class="card">
+<div class="text-sm font-bold mb-3">成就系統</div>
+<ul id="achievements" class="space-y-2 text-sm"></ul>
+</div>
+</div>
 
 <script>
-// ===== 全域變數 =====
-var myChart=null, dcaChartInst=null;
-var watchlist=JSON.parse(localStorage.getItem('wf_watch'))||[];
-var alertList=JSON.parse(localStorage.getItem('wf_alerts'))||[];
-var historyList=JSON.parse(localStorage.getItem('wf_history'))||[];
-var allNews=[];
-var isLight=localStorage.getItem('wf_theme')==='light';
+let chart;
 
-// ===== 主題 =====
-function applyTheme(){
-  document.body.classList.toggle('light',isLight);
-  document.getElementById('theme-btn').innerHTML=isLight
-    ?'<i class="fa-solid fa-sun"></i>'
-    :'<i class="fa-solid fa-moon"></i>';
-}
-function toggleTheme(){isLight=!isLight;localStorage.setItem('wf_theme',isLight?'light':'dark');applyTheme();}
-applyTheme();
-
-// ===== Toast =====
-function showToast(msg){
-  var t=document.getElementById('toast');
-  t.textContent=msg;t.classList.add('show');
-  setTimeout(()=>t.classList.remove('show'),2500);
+function switchTab(tab){
+document.querySelectorAll("[id^='tab-']").forEach(el=>el.classList.add("hidden"));
+document.getElementById("tab-"+tab).classList.remove("hidden");
 }
 
-// ===== 分頁 =====
-function switchTab(name){
-  document.querySelectorAll('.tab-content').forEach(el=>el.classList.remove('active'));
-  document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
-  document.getElementById('tab-'+name).classList.add('active');
-  event.target.classList.add('active');
-  if(name==='news')loadNews();
-  if(name==='history')renderHistory();
-  if(name==='watchlist')renderWatchlist();
-  if(name==='alerts')renderAlerts();
-  if(name==='dca')calcDCA();
-  if(name==='dividend')calcDividend();
+function animateNumber(id,value){
+let el=document.getElementById(id);
+let start=0;
+let duration=800;
+let startTime=null;
+function step(timestamp){
+if(!startTime) startTime=timestamp;
+let progress=Math.min((timestamp-startTime)/duration,1);
+el.textContent=Math.floor(progress*(value-start)+start).toLocaleString();
+if(progress<1) requestAnimationFrame(step);
+}
+requestAnimationFrame(step);
 }
 
-// ===== 工具函數 =====
-function fmt(n,p){var num=parseFloat(n);if(isNaN(num))return(p||'')+'0';return(p||'')+num.toLocaleString('en-US',{maximumFractionDigits:0});}
-function hideKeyboard(){if(document.activeElement&&document.activeElement.tagName==='INPUT')document.activeElement.blur();}
-function uiInteract(){hideKeyboard();}
+function calculate(){
+let asset=parseFloat(assetInput.value)||0;
+let goal=parseFloat(goalInput.value)||1;
+let rate=(parseFloat(returnInput.value)||5)/100;
+let years=parseInt(yearInput.value)||5;
 
-// ===== 主控台計算 =====
-function safeCalculate(){
-  try{
-    var c=parseFloat(document.getElementById('cost_price').value)||48;
-    var cur=parseFloat(document.getElementById('current_price').value)||77;
-    var s=parseFloat(document.getElementById('shares').value)||1602;
-    var fx=parseFloat(document.getElementById('fx_rate').value)||31.4;
-    var q=parseFloat(document.getElementById('qqq_now').value)||25660;
-    var r=parseFloat(document.getElementById('transfer_ratio').value)||25;
-    var re=parseFloat(document.getElementById('expected_return').value)||11;
-    var y=parseInt(document.getElementById('years').value)||5;
+localStorage.setItem("wfData",JSON.stringify({asset,goal,rate,years}));
 
-    document.getElementById('ratio_val').innerText=r;
-    document.getElementById('ret_val').innerText=re;
-    document.getElementById('yrs_val').innerText=y;
+let percent=Math.min(100,(asset/goal)*100);
+goalBar.style.width=percent+"%";
+goalPercent.textContent=percent.toFixed(1)+"%";
 
-    localStorage.setItem('winner_v13',JSON.stringify({c,cur,s,fx,q}));
+animateNumber("totalAsset",asset);
 
-    var profit=(cur-c)*s;
-    var totalVal=cur*s;
-    var margin=(cur-c)/cur;
-    var roi=((cur-c)/c)*100;
-    var extractTwd=profit*(r/100);
-    var friction=extractTwd>0?(extractTwd*0.004425+850):0;
-    var netUsd=(extractTwd-friction>0)?(extractTwd-friction)/fx:0;
-    var willDivert=margin>=0.1;
-    var principal=q+(willDivert?netUsd:0);
-    var future=principal*Math.pow(1+(re/100),y);
+let future=asset*Math.pow(1+rate,years);
+todayPnL.textContent="預估未來資產 "+future.toLocaleString();
 
-    document.getElementById('out_margin_text').innerText=(margin*100).toFixed(1)+'%';
-    document.getElementById('out_transfer').innerText=fmt(netUsd,'$');
-    document.getElementById('out_future').innerText=fmt(future,'$');
-    document.getElementById('out_total_twd').innerText=fmt(totalVal,'NT$');
-    document.getElementById('out_profit').innerText=(profit>=0?'+':'')+fmt(profit,'NT$');
-    document.getElementById('out_qqq_twd').innerText=fmt(q*fx,'NT$');
+let stress=Math.min(100, (asset/goal)*50 + years*2);
+stressValue.textContent=stress.toFixed(0)+" / 100";
 
-    var roiB=document.getElementById('roi_badge');
-    roiB.innerText=(roi>=0?'+':'')+roi.toFixed(1)+'%';
-    roiB.className='absolute -bottom-2 left-1/2 -translate-x-1/2 text-[9px] font-black px-2 py-0.5 rounded-full border border-slate-700 bg-black z-10 '+(roi>=0?'text-emerald-400':'text-rose-400');
+if(stress<40) aiAdvice.textContent="SAFE 穩健成長";
+else if(stress<70) aiAdvice.textContent="注意風險控管";
+else aiAdvice.textContent="壓力偏高 建議調整";
 
-    var mb=document.getElementById('margin_bar');
-    var ab=document.getElementById('alert_box');
-    mb.style.width=Math.min(100,Math.max(0,margin*200))+'%';
-    if(margin>=0.2){mb.className='h-full bg-emerald-500';ab.innerText='SAFE 建議導流';ab.className='text-[10px] font-bold px-3 py-1.5 rounded-lg bg-emerald-500/20 text-emerald-400';}
-    else if(margin>=0.1){mb.className='h-full bg-amber-500';ab.innerText='WARN 保守導流';ab.className='text-[10px] font-bold px-3 py-1.5 rounded-lg bg-amber-500/20 text-amber-400';}
-    else{mb.className='h-full bg-rose-500';ab.innerText='STOP 暫停操作';ab.className='text-[10px] font-bold px-3 py-1.5 rounded-lg bg-rose-500/20 text-rose-500';}
-
-    try{
-      if(typeof Chart!=='undefined'){
-        var lbls=[],dta=[];
-        for(var i=0;i<=y;i++){lbls.push('Y'+i);dta.push(principal*Math.pow(1+(re/100),i));}
-        if(myChart)myChart.destroy();
-        var ctx=document.getElementById('growthChart').getContext('2d');
-        var grad=ctx.createLinearGradient(0,0,0,150);
-        grad.addColorStop(0,'rgba(16,185,129,0.3)');grad.addColorStop(1,'transparent');
-        myChart=new Chart(ctx,{type:'line',data:{labels:lbls,datasets:[{data:dta,borderColor:'#10b981',backgroundColor:grad,fill:true,tension:0.4,borderWidth:2,pointRadius:0}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{y:{display:false},x:{grid:{display:false},ticks:{color:'#64748b',font:{size:10}}}}}});
-      }
-    }catch(err){}
-
-    document.getElementById('milestone').innerText='✅ 計算完成 | 0050 ROI '+roi.toFixed(1)+'% | QQQ 淨值 NT$'+fmt(q*fx);
-    checkAlertsSilent(cur);
-  }catch(e){document.getElementById('milestone').innerText='⚠️ 系統自我修復中...';}
+renderChart(asset,rate,years);
+checkAchievements(asset);
 }
 
-// ===== 儲存歷史 =====
-function saveHistory(){
-  var c=parseFloat(document.getElementById('cost_price').value)||0;
-  var cur=parseFloat(document.getElementById('current_price').value)||0;
-  var s=parseFloat(document.getElementById('shares').value)||0;
-  var q=parseFloat(document.getElementById('qqq_now').value)||0;
-  var fx=parseFloat(document.getElementById('fx_rate').value)||0;
-  var profit=(cur-c)*s;
-  var now=new Date();
-  var entry={
-    time:now.toLocaleString('zh-TW'),
-    cost:c,cur:cur,shares:s,
-    profit:profit,
-    roi:((cur-c)/c*100).toFixed(1),
-    qqq:q,fx:fx
-  };
-  historyList.unshift(entry);
-  if(historyList.length>50)historyList.pop();
-  localStorage.setItem('wf_history',JSON.stringify(historyList));
-  showToast('✅ 已儲存紀錄');
+function renderChart(asset,rate,years){
+let labels=[];
+let data=[];
+for(let i=0;i<=years;i++){
+labels.push("Y"+i);
+data.push(asset*Math.pow(1+rate,i));
 }
-function renderHistory(){
-  var el=document.getElementById('history-rows');
-  if(!historyList.length){el.innerHTML='<div class="text-center text-slate-500 text-sm py-8">尚無歷史紀錄</div>';return;}
-  el.innerHTML=historyList.map((h,i)=>`
-    <div class="hist-row" style="border-left-color:${parseFloat(h.roi)>=0?'#10b981':'#f43f5e'}">
-      <div class="flex justify-between items-start">
-        <div>
-          <span class="text-[10px] text-slate-400">${h.time}</span>
-          <div class="text-white font-black mt-0.5">0050: ${h.cost}→${h.cur} | 股數:${h.shares}</div>
-          <div class="text-slate-400">帳面獲利: <span class="${parseFloat(h.roi)>=0?'text-emerald-400':'text-rose-400'}">${parseFloat(h.roi)>=0?'+':''}${fmt(h.profit,'NT$')} (${h.roi}%)</span></div>
-          <div class="text-slate-400">QQQ: $${h.qqq} | 匯率: ${h.fx}</div>
-        </div>
-        <button onclick="deleteHistory(${i})" class="text-slate-600 hover:text-rose-400 text-lg ml-2">×</button>
-      </div>
-    </div>`).join('');
-}
-function deleteHistory(i){historyList.splice(i,1);localStorage.setItem('wf_history',JSON.stringify(historyList));renderHistory();}
-function clearHistory(){if(confirm('確定清除所有紀錄？')){historyList=[];localStorage.setItem('wf_history','[]');renderHistory();showToast('已清除');}}
-
-// ===== 股票追蹤 =====
-function addWatchStock(){
-  var code=document.getElementById('w-code').value.trim();
-  var name=document.getElementById('w-name').value.trim()||code;
-  var cost=parseFloat(document.getElementById('w-cost').value)||0;
-  var sh=parseFloat(document.getElementById('w-shares').value)||0;
-  if(!code){showToast('請輸入股票代號');return;}
-  watchlist.push({code,name,cost,shares:sh,curPrice:cost});
-  localStorage.setItem('wf_watch',JSON.stringify(watchlist));
-  document.getElementById('w-code').value='';
-  document.getElementById('w-name').value='';
-  document.getElementById('w-cost').value='';
-  document.getElementById('w-shares').value='';
-  renderWatchlist();showToast('已加入 '+code);
-}
-function deleteWatch(i){watchlist.splice(i,1);localStorage.setItem('wf_watch',JSON.stringify(watchlist));renderWatchlist();}
-function renderWatchlist(){
-  var el=document.getElementById('watchlist-rows');
-  if(!watchlist.length){el.innerHTML='<div class="text-center text-slate-500 text-sm py-8">尚無追蹤股票</div>';return;}
-  el.innerHTML=watchlist.map((w,i)=>{
-    var profit=(w.curPrice-w.cost)*w.shares;
-    var roi=w.cost>0?((w.curPrice-w.cost)/w.cost*100):0;
-    var pos=roi>=0;
-    return`<div class="stock-row">
-      <div class="flex-1">
-        <div class="flex items-center gap-2 mb-1">
-          <span class="font-black text-white">${w.code}</span>
-          <span class="text-slate-400 text-sm">${w.name}</span>
-          <span class="stock-badge ${pos?'bg-emerald-500/20 text-emerald-400':'bg-rose-500/20 text-rose-400'}">${pos?'+':''}${roi.toFixed(1)}%</span>
-        </div>
-        <div class="text-xs text-slate-400">成本: ${w.cost} | 現價: <span class="${pos?'text-emerald-400':'text-rose-400'} font-bold">${w.curPrice}</span> | 股數: ${w.shares}</div>
-        <div class="text-xs mt-0.5">帳面: <span class="${pos?'text-emerald-300':'text-rose-300'} font-bold">${pos?'+':''}${fmt(profit,'NT$')}</span> | 市值: ${fmt(w.curPrice*w.shares,'NT$')}</div>
-      </div>
-      <button onclick="deleteWatch(${i})" class="text-slate-600 hover:text-rose-400 text-xl ml-3">×</button>
-    </div>`;
-  }).join('');
+if(chart) chart.destroy();
+chart=new Chart(growthChart,{
+type:"line",
+data:{labels:labels,datasets:[{data:data,borderColor:"#10b981",fill:false}]},
+options:{plugins:{legend:{display:false}},scales:{y:{display:false}}}
+});
 }
 
-// ===== 停損停利 =====
-function addAlert(){
-  var code=document.getElementById('al-code').value.trim();
-  var cur=parseFloat(document.getElementById('al-cur').value)||0;
-  var tp=parseFloat(document.getElementById('al-tp').value)||0;
-  var sl=parseFloat(document.getElementById('al-sl').value)||0;
-  if(!code||!cur){showToast('請填入股票代號與目前價格');return;}
-  alertList.push({code,cur,tp,sl,triggered:false});
-  localStorage.setItem('wf_alerts',JSON.stringify(alertList));
-  renderAlerts();showToast('已設定 '+code+' 提醒');
-}
-function deleteAlert(i){alertList.splice(i,1);localStorage.setItem('wf_alerts',JSON.stringify(alertList));renderAlerts();}
-function renderAlerts(){
-  var el=document.getElementById('alert-rows');
-  if(!alertList.length){el.innerHTML='<div class="text-center text-slate-500 text-sm py-8">尚無停損停利設定</div>';return;}
-  el.innerHTML=alertList.map((a,i)=>`
-    <div class="alert-row flex items-center justify-between">
-      <div>
-        <div class="font-black text-white mb-1">${a.code} <span class="text-slate-400 font-normal text-sm">現價 ${a.cur}</span></div>
-        <div class="flex gap-3 text-xs">
-          <span class="text-emerald-400">🟢 停利: ${a.tp||'未設'}</span>
-          <span class="text-rose-400">🔴 停損: ${a.sl||'未設'}</span>
-          ${a.triggered?'<span class="text-amber-400 font-bold">⚡ 已觸發</span>':''}
-        </div>
-      </div>
-      <button onclick="deleteAlert(${i})" class="text-slate-600 hover:text-rose-400 text-xl ml-3">×</button>
-    </div>`).join('');
-}
-function checkAlerts(){
-  var triggered=[];
-  alertList.forEach((a,i)=>{
-    var p=parseFloat(prompt('請輸入 '+a.code+' 現在價格（取消跳過）'));
-    if(isNaN(p)||!p)return;
-    a.cur=p;
-    if(a.tp&&p>=a.tp){alert('🎯 '+a.code+' 已達停利價 '+a.tp+'！現價 '+p);a.triggered=true;}
-    if(a.sl&&p<=a.sl){alert('⚠️ '+a.code+' 已達停損價 '+a.sl+'！現價 '+p);a.triggered=true;}
-  });
-  localStorage.setItem('wf_alerts',JSON.stringify(alertList));
-  renderAlerts();showToast('檢查完成');
-}
-function checkAlertsSilent(price0050){
-  alertList.forEach(a=>{
-    if(a.code==='0050'||a.code==='00505'){
-      if(a.tp&&price0050>=a.tp&&!a.triggered){showToast('🎯 0050 停利 '+a.tp+' 觸發！');a.triggered=true;}
-      if(a.sl&&price0050<=a.sl&&!a.triggered){showToast('⚠️ 0050 停損 '+a.sl+' 觸發！');a.triggered=true;}
-    }
-  });
-  localStorage.setItem('wf_alerts',JSON.stringify(alertList));
+function checkAchievements(asset){
+let list=[];
+if(asset>=1000000) list.push("🥇 資產突破百萬");
+if(asset>=5000000) list.push("🏆 資產突破五百萬");
+if(asset>=10000000) list.push("👑 千萬資產達成");
+achievements.innerHTML=list.map(a=>"<li>"+a+"</li>").join("");
 }
 
-// ===== 定期定額 =====
-function calcDCA(){
-  var monthly=parseFloat(document.getElementById('dca-monthly').value)||10000;
-  var ret=(parseFloat(document.getElementById('dca-return').value)||10)/100;
-  var yrs=parseInt(document.getElementById('dca-years').value)||20;
-  var init=parseFloat(document.getElementById('dca-init').value)||0;
-  var infl=(parseFloat(document.getElementById('dca-inflation').value)||2)/100;
-  var mRate=ret/12;
-  var n=yrs*12;
-  var fv=init*Math.pow(1+ret,yrs)+monthly*(Math.pow(1+mRate,n)-1)/mRate;
-  var real=fv/Math.pow(1+infl,yrs);
-  var totalIn=init+monthly*n;
-  document.getElementById('dca-final').innerText=fmt(fv,'NT$');
-  document.getElementById('dca-real').innerText=fmt(real,'NT$');
-  document.getElementById('dca-invest').innerText=fmt(totalIn,'NT$');
-  document.getElementById('dca-gain').innerText=fmt(fv-totalIn,'NT$');
-  try{
-    if(typeof Chart!=='undefined'){
-      var lbls=[],nom=[],rl=[];
-      for(var i=0;i<=yrs;i++){
-        lbls.push('Y'+i);
-        var ni=init*Math.pow(1+ret,i)+monthly*12*(Math.pow(1+ret,i)-1)/ret;
-        nom.push(ni);rl.push(ni/Math.pow(1+infl,i));
-      }
-      if(dcaChartInst)dcaChartInst.destroy();
-      var ctx=document.getElementById('dcaChart').getContext('2d');
-      var g1=ctx.createLinearGradient(0,0,0,200);g1.addColorStop(0,'rgba(16,185,129,0.25)');g1.addColorStop(1,'transparent');
-      var g2=ctx.createLinearGradient(0,0,0,200);g2.addColorStop(0,'rgba(99,102,241,0.2)');g2.addColorStop(1,'transparent');
-      dcaChartInst=new Chart(ctx,{type:'line',data:{labels:lbls,datasets:[
-        {label:'名目資產',data:nom,borderColor:'#10b981',backgroundColor:g1,fill:true,tension:0.4,borderWidth:2,pointRadius:0},
-        {label:'實質資產',data:rl,borderColor:'#6366f1',backgroundColor:g2,fill:true,tension:0.4,borderWidth:2,pointRadius:0,borderDash:[5,3]}
-      ]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{color:'#94a3b8',font:{size:11}}}},scales:{y:{display:false},x:{grid:{display:false},ticks:{color:'#64748b',font:{size:10}}}}}});
-    }
-  }catch(e){}
-}
+dividendInput?.addEventListener("input",()=>{
+let val=parseFloat(dividendInput.value)||0;
+let after=val*0.72;
+dividendAfterTax.textContent="扣稅後 "+after.toLocaleString();
+});
 
-// ===== 股息試算 =====
-function calcDividend(){
-  var sh=parseFloat(document.getElementById('div-shares').value)||1602;
-  var per=parseFloat(document.getElementById('div-per').value)||3.5;
-  var freq=parseInt(document.getElementById('div-freq').value)||1;
-  var price=parseFloat(document.getElementById('div-price').value)||77;
-  var yrs=parseInt(document.getElementById('div-years').value)||10;
-  var fx=parseFloat(document.getElementById('div-fx').value)||31.4;
-  var annual=sh*per*freq;
-  var monthly=annual/12;
-  var yld=(per*freq/price*100);
-  var total=annual*yrs;
-  var afterTax=annual*0.72;
-  document.getElementById('div-annual').innerText=fmt(annual,'NT$');
-  document.getElementById('div-monthly').innerText=fmt(monthly,'NT$');
-  document.getElementById('div-yield').innerText=yld.toFixed(2)+'%';
-  document.getElementById('div-total').innerText=fmt(total,'NT$');
-  document.getElementById('div-after-tax').innerText=fmt(afterTax,'NT$')+' / $'+fmt(afterTax/fx);
+window.onload=()=>{
+let saved=JSON.parse(localStorage.getItem("wfData"));
+if(saved){
+assetInput.value=saved.asset;
+goalInput.value=saved.goal;
+returnInput.value=saved.rate*100;
+yearInput.value=saved.years;
+calculate();
 }
-
-// ===== 新聞 =====
-async function loadNews(){
-  var el=document.getElementById('news-container');
-  el.innerHTML='<div class="text-center text-slate-500 py-10"><i class="fa-solid fa-spinner fa-spin text-2xl mb-3 block"></i>載入新聞中...</div>';
-  // 使用 RSS2JSON 代理抓取新聞
-  var feeds=[
-    {url:'https://www.cnyes.com/rss/cat/tw_stock',label:'鉅亨台股',cat:'tw',color:'bg-blue-500/20 text-blue-300'},
-    {url:'https://www.cnyes.com/rss/cat/us_stock',label:'鉅亨美股',cat:'us',color:'bg-purple-500/20 text-purple-300'},
-    {url:'https://www.cnyes.com/rss/cat/forex',label:'鉅亨匯率',cat:'fx',color:'bg-amber-500/20 text-amber-300'}
-  ];
-  allNews=[];
-  var promises=feeds.map(f=>
-    fetch('https://api.rss2json.com/v1/api.json?rss_url='+encodeURIComponent(f.url)+'&count=8')
-      .then(r=>r.json())
-      .then(d=>{
-        if(d.items)d.items.forEach(item=>allNews.push({title:item.title,link:item.link,date:item.pubDate,cat:f.cat,source:f.label,color:f.color}));
-      }).catch(()=>{})
-  );
-  await Promise.allSettled(promises);
-  if(!allNews.length){
-    // fallback 靜態示範
-    allNews=[
-      {title:'台股加權指數今日收盤上漲0.8%，外資買超150億',link:'#',date:new Date().toISOString(),cat:'tw',source:'示範',color:'bg-blue-500/20 text-blue-300'},
-      {title:'0050 ETF持續吸引資金流入，規模突破新高',link:'#',date:new Date().toISOString(),cat:'tw',source:'示範',color:'bg-blue-500/20 text-blue-300'},
-      {title:'美聯準會會議記錄顯示通膨壓力趨緩',link:'#',date:new Date().toISOString(),cat:'us',source:'示範',color:'bg-purple-500/20 text-purple-300'},
-      {title:'QQQ連續第三週資金淨流入，科技股強勢',link:'#',date:new Date().toISOString(),cat:'us',source:'示範',color:'bg-purple-500/20 text-purple-300'},
-      {title:'美元指數走弱，新台幣升值至31.2',link:'#',date:new Date().toISOString(),cat:'fx',source:'示範',color:'bg-amber-500/20 text-amber-300'},
-    ];
-  }
-  allNews.sort((a,b)=>new Date(b.date)-new Date(a.date));
-  filterNews('all');
-}
-function filterNews(cat){
-  document.querySelectorAll('.news-tab').forEach(b=>b.classList.remove('active'));
-  event.target.classList.add('active');
-  var filtered=cat==='all'?allNews:allNews.filter(n=>n.cat===cat);
-  var el=document.getElementById('news-container');
-  if(!filtered.length){el.innerHTML='<div class="text-center text-slate-500 py-8">暫無此類新聞</div>';return;}
-  el.innerHTML=filtered.map(n=>`
-    <div class="news-item" onclick="window.open('${n.link}','_blank')">
-      <div class="flex items-start gap-2 mb-1">
-        <span class="news-source ${n.color}">${n.source}</span>
-        <span class="text-[10px] text-slate-500">${new Date(n.date).toLocaleString('zh-TW',{month:'numeric',day:'numeric',hour:'2-digit',minute:'2-digit'})}</span>
-      </div>
-      <div class="text-sm text-white font-medium leading-snug">${n.title}</div>
-    </div>`).join('');
-}
-
-// ===== 資產快照 =====
-function takeSnapshot(){
-  showToast('📸 產生快照中...');
-  // 切換到主控台
-  document.querySelectorAll('.tab-content').forEach(el=>el.classList.remove('active'));
-  document.getElementById('tab-main').classList.add('active');
-  setTimeout(()=>{
-    html2canvas(document.querySelector('.w-full.max-w-5xl'),{backgroundColor:isLight?'#f1f5f9':'#020617',scale:2,useCORS:true}).then(canvas=>{
-      var link=document.createElement('a');
-      link.download='WinnerFlow_'+new Date().toLocaleDateString('zh-TW').replace(/\//g,'-')+'.png';
-      link.href=canvas.toDataURL('image/png');
-      link.click();
-      showToast('✅ 快照已下載！');
-    }).catch(()=>showToast('❌ 快照失敗，請重試'));
-  },300);
-}
-
-// ===== 同步市場 =====
-function fetchWithTimeout(url,lim){
-  return Promise.race([fetch(url),new Promise((_,rej)=>setTimeout(()=>rej(new Error('timeout')),lim))]);
-}
-async function fetchMarketData(){
-  uiInteract();
-  var bT=document.getElementById('f-text');var bI=document.getElementById('f-icon');var st=document.getElementById('sync_status');
-  bT.innerText='連線中...';bI.className='fa-solid fa-satellite-dish fa-spin';
-  var fx=null,stk=null;
-  try{const r=await fetchWithTimeout('https://open.er-api.com/v6/latest/USD',5000);const d=await r.json();if(d&&d.rates)fx=d.rates.TWD;}catch(e){}
-  try{const r=await fetchWithTimeout('https://openapi.twse.com.tw/v1/exchangeReport/STOCK_DAY_ALL',5000);const d=await r.json();for(var i=0;i<d.length;i++){if(d[i].Code==='0050'){stk=parseFloat(d[i].ClosingPrice);break;}}}catch(e){}
-  if(fx&&fx>0){document.getElementById('fx_rate').value=fx.toFixed(2);document.getElementById('div-fx').value=fx.toFixed(2);}
-  if(stk&&stk>0){document.getElementById('current_price').value=stk;document.getElementById('div-price').value=stk;}
-  if(fx||stk){
-    safeCalculate();bI.className='fa-solid fa-check text-emerald-400';bT.innerText='同步完成';
-    var n=new Date();st.innerText='最後更新: '+n.getHours()+':'+n.getMinutes().toString().padStart(2,'0');
-    st.className='text-[10px] font-bold text-emerald-400 uppercase tracking-widest mt-1';
-    // 同步更新股票追蹤中的0050
-    watchlist.forEach(w=>{if(w.code==='0050'&&stk)w.curPrice=stk;});
-    localStorage.setItem('wf_watch',JSON.stringify(watchlist));
-    showToast('✅ 市場資料同步完成');
-  }else{bI.className='fa-solid fa-xmark text-rose-500';bT.innerText='連線失敗';st.innerText='API無回應，請手動輸入';st.className='text-[10px] font-bold text-rose-500 uppercase tracking-widest mt-1';}
-  setTimeout(()=>{bI.className='fa-solid fa-satellite-dish';bT.innerText='同步市場';},3000);
-}
-
-// ===== 初始化 =====
-function initApp(){
-  if('serviceWorker' in navigator){navigator.serviceWorker.getRegistrations().then(r=>r.forEach(reg=>reg.unregister()));}
-  var saved=null;
-  try{saved=JSON.parse(localStorage.getItem('winner_v13'));}catch(e){}
-  if(saved){
-    if(!isNaN(saved.c))document.getElementById('cost_price').value=saved.c;
-    if(!isNaN(saved.cur))document.getElementById('current_price').value=saved.cur;
-    if(!isNaN(saved.s))document.getElementById('shares').value=saved.s;
-    if(!isNaN(saved.fx))document.getElementById('fx_rate').value=saved.fx;
-    if(!isNaN(saved.q))document.getElementById('qqq_now').value=saved.q;
-  }
-  safeCalculate();
-  calcDCA();
-  calcDividend();
-  renderWatchlist();
-  renderAlerts();
-}
-initApp();
+};
 </script>
+
 </body>
 </html>
