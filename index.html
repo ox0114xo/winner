@@ -2,304 +2,225 @@
 <html lang="zh-TW">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>WinnerFlow 戰情室</title>
-<link rel="apple-touch-icon" href="icon.png">
-<link rel="icon" type="image/png" href="icon.png">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>WinnerFlow 3.0</title>
+
 <script src="https://cdn.tailwindcss.com"></script>
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+
 <style>
-  :root {
-    --accent: #10b981; --accent2: #6366f1; --bg: #0f172a; 
-    --card: rgba(30, 41, 59, 0.7); --border: rgba(255, 255, 255, 0.1); 
-    --text: #f8fafc; --muted: #94a3b8; --fs: 16px;
-  }
-  body { 
-    background: var(--bg); color: var(--text); font-family: system-ui, -apple-system, sans-serif;
-    -webkit-tap-highlight-color: transparent; overflow-x: hidden; min-height: 100vh;
-    font-size: var(--fs); padding-bottom: 80px; /* 留給底部分頁 */
-  }
-  
-  /* 現代化卡片設計 */
-  .glass-card { 
-    background: var(--card); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
-    border: 1px solid var(--border); border-radius: 1.5rem; box-shadow: 0 10px 30px rgba(0,0,0,0.3);
-  }
-  
-  /* 完美的現代化輸入框 */
-  .input-modern { 
-    background: rgba(15, 23, 42, 0.6); border: 1px solid rgba(255,255,255,0.15); 
-    color: #fff; text-align: center; border-radius: 0.75rem; padding: 0.75rem 1rem; 
-    font-weight: 800; font-size: 1.15rem; width: 100%; outline: none; transition: all 0.2s ease; 
-  }
-  .input-modern:focus { border-color: var(--accent); background: rgba(15, 23, 42, 0.9); box-shadow: 0 0 0 2px rgba(16,185,129,0.2); }
-  input[type=number]::-webkit-inner-spin-button { -webkit-appearance: none; }
-  
-  /* 滑桿美化 */
-  input[type=range] { -webkit-appearance: none; background: transparent; height: 2rem; width: 100%; }
-  input[type=range]::-webkit-slider-runnable-track { background: rgba(255,255,255,0.1); height: 6px; border-radius: 3px; }
-  input[type=range]::-webkit-slider-thumb { 
-    -webkit-appearance: none; height: 24px; width: 24px; border-radius: 50%; 
-    background: var(--accent); margin-top: -9px; border: 3px solid #fff; box-shadow: 0 2px 6px rgba(0,0,0,0.3);
-  }
-  
-  /* 底部分頁導航列 */
-  .tab-nav {
-    position: fixed; bottom: 0; left: 0; right: 0; background: rgba(15, 23, 42, 0.9);
-    backdrop-filter: blur(10px); border-top: 1px solid var(--border);
-    display: flex; overflow-x: auto; padding: 0.5rem; gap: 0.5rem; z-index: 50;
-    scrollbar-width: none; /* Firefox */
-  }
-  .tab-nav::-webkit-scrollbar { display: none; } /* Chrome */
-  
-  .tab-btn {
-    flex: 0 0 auto; padding: 0.5rem 1rem; border-radius: 1rem; font-size: 0.85rem; font-weight: 700;
-    color: var(--muted); background: transparent; transition: all 0.2s; display: flex; align-items: center; gap: 0.5rem;
-  }
-  .tab-btn.active { background: var(--accent); color: #020617; }
-  
-  .tab-content { display: none; animation: fadeIn 0.3s ease; }
-  .tab-content.active { display: block; }
-  @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+body{
+  background:linear-gradient(180deg,#0f172a,#020617);
+  color:white;
+  font-family:system-ui;
+}
 
-  /* 大盤看板微調 */
-  .idx-card { background: rgba(255,255,255,0.03); border: 1px solid var(--border); border-radius: 1rem; padding: 0.75rem; text-align: center; }
-  
-  /* 搜尋下拉選單 */
-  .stock-drop { position: absolute; top: 100%; left: 0; right: 0; background: #1e293b; border: 1px solid #334155; border-radius: 0.75rem; margin-top: 4px; z-index: 40; max-height: 200px; overflow-y: auto; display: none; box-shadow: 0 10px 25px rgba(0,0,0,0.5); }
-  .stock-drop.open { display: block; }
-  .drop-item { padding: 0.75rem 1rem; cursor: pointer; border-bottom: 1px solid rgba(255,255,255,0.05); display: flex; justify-content: space-between; align-items: center; }
-  .drop-item:hover { background: rgba(255,255,255,0.05); }
+.glass{
+  background:rgba(255,255,255,0.05);
+  backdrop-filter:blur(12px);
+  border:1px solid rgba(255,255,255,0.08);
+  border-radius:1.5rem;
+  padding:1.5rem;
+}
 
-  /* 背景點綴光 */
-  .glow-bg { position: fixed; top: -10%; left: -10%; width: 40vw; height: 40vw; background: radial-gradient(circle, rgba(16,185,129,0.1) 0%, transparent 70%); filter: blur(60px); z-index: -1; }
+.big-number{
+  font-size:2.5rem;
+  font-weight:900;
+}
+
+.nav-btn{
+  padding:8px 16px;
+  border-radius:999px;
+  background:#1e293b;
+}
+
+.nav-btn.active{
+  background:#10b981;
+  color:black;
+}
+
 </style>
 </head>
-<body>
 
-<div class="glow-bg"></div>
+<body class="p-4 max-w-6xl mx-auto space-y-6">
 
-<div class="w-full max-w-5xl mx-auto p-4 flex justify-between items-center mb-2">
-  <div class="flex items-center gap-3">
-    <div class="w-12 h-12 rounded-xl bg-gradient-to-br from-emerald-400 to-emerald-600 p-0.5 shadow-lg shadow-emerald-500/20">
-      <img src="icon.png" class="w-full h-full rounded-[10px]" onerror="this.style.display='none'">
-    </div>
-    <div>
-      <h1 class="text-xl font-black italic tracking-tighter">WINNER<span class="text-emerald-400">FLOW</span></h1>
-      <div class="flex items-center gap-1.5 mt-0.5">
-        <span class="relative flex h-2 w-2"><span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span><span class="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span></span>
-        <span id="sync_status" class="text-[9px] font-bold text-slate-400 uppercase tracking-widest">系統運作中</span>
-      </div>
-    </div>
-  </div>
-  <button onclick="fetchMarketData()" class="bg-slate-800 hover:bg-slate-700 text-emerald-400 border border-slate-700 px-4 py-2.5 rounded-xl font-black text-xs transition-all flex items-center gap-2 active:scale-95">
-    <i id="f-icon" class="fa-solid fa-satellite-dish"></i> <span id="f-text">同步資料</span>
-  </button>
+<!-- NAV -->
+<div class="flex gap-2 text-sm font-bold">
+<button onclick="switchTab('home')" class="nav-btn active">首頁</button>
+<button onclick="switchTab('control')" class="nav-btn">資產控制</button>
+<button onclick="switchTab('record')" class="nav-btn">成就系統</button>
 </div>
 
-<div class="w-full max-w-5xl mx-auto px-4 space-y-5">
+<!-- HOME -->
+<div id="tab-home" class="space-y-6">
 
-  <div class="glass-card p-4">
-    <div class="flex items-center justify-between mb-3 px-1">
-      <span class="text-[10px] font-black text-slate-400 uppercase tracking-widest"><i class="fa-solid fa-chart-line mr-1"></i>全球大盤</span>
-      <span id="idx-time" class="text-[10px] text-slate-500"></span>
-    </div>
-    <div class="grid grid-cols-3 md:grid-cols-6 gap-2" id="idx-board">
-      <div class="idx-card"><div class="text-[9px] text-slate-400 mb-0.5">台灣加權</div><div class="font-black text-sm" id="idx-twse">--</div><div class="text-[9px] mt-0.5" id="idx-twse-chg">--</div></div>
-      <div class="idx-card"><div class="text-[9px] text-slate-400 mb-0.5">櫃買指數</div><div class="font-black text-sm" id="idx-otc">--</div><div class="text-[9px] mt-0.5" id="idx-otc-chg">--</div></div>
-      <div class="idx-card"><div class="text-[9px] text-slate-400 mb-0.5">道瓊工業</div><div class="font-black text-sm" id="idx-dow">--</div><div class="text-[9px] mt-0.5" id="idx-dow-chg">--</div></div>
-      <div class="idx-card"><div class="text-[9px] text-slate-400 mb-0.5">那斯達克</div><div class="font-black text-sm" id="idx-nas">--</div><div class="text-[9px] mt-0.5" id="idx-nas-chg">--</div></div>
-      <div class="idx-card"><div class="text-[9px] text-slate-400 mb-0.5">S&P 500</div><div class="font-black text-sm" id="idx-sp">--</div><div class="text-[9px] mt-0.5" id="idx-sp-chg">--</div></div>
-      <div class="idx-card"><div class="text-[9px] text-slate-400 mb-0.5">費城半導體</div><div class="font-black text-sm" id="idx-sox">--</div><div class="text-[9px] mt-0.5" id="idx-sox-chg">--</div></div>
-    </div>
-  </div>
+<!-- 資產儀表 -->
+<div class="glass text-center">
+<canvas id="goalChart" height="160"></canvas>
+<div class="big-number mt-2" id="assetDisplay">--</div>
+<div id="todayDisplay" class="text-emerald-400 font-bold">--</div>
+</div>
 
-  <div id="tab-main" class="tab-content active">
-    <div class="lg:flex gap-5 space-y-5 lg:space-y-0">
-      
-      <div class="lg:w-1/2 space-y-5">
-        <div class="glass-card p-6 border-t-2 border-emerald-500">
-          <div class="grid grid-cols-2 gap-4 mb-5">
-            <div>
-              <label class="text-[10px] font-black text-slate-400 block mb-1.5 uppercase tracking-wider"><i class="fa-solid fa-tag mr-1"></i>0050 均價</label>
-              <input type="number" id="cost_price" value="48" class="input-modern" oninput="safeCalculate()">
-            </div>
-            <div class="relative">
-              <label class="text-[10px] font-black text-slate-400 block mb-1.5 uppercase tracking-wider"><i class="fa-solid fa-bolt text-emerald-400 mr-1"></i>0050 市價</label>
-              <input type="number" id="current_price" value="77" class="input-modern text-emerald-400" oninput="safeCalculate()">
-              <span id="roi_badge" class="absolute -bottom-2 left-1/2 -translate-x-1/2 text-[9px] font-black px-2 py-0.5 rounded-full bg-slate-900 border border-slate-700 shadow-xl whitespace-nowrap">--%</span>
-            </div>
-            <div class="mt-2">
-              <label class="text-[10px] font-black text-slate-400 block mb-1.5 uppercase tracking-wider"><i class="fa-solid fa-layer-group mr-1"></i>持有股數</label>
-              <input type="number" id="shares" value="1602" class="input-modern" oninput="safeCalculate()">
-            </div>
-            <div class="mt-2">
-              <label class="text-[10px] font-black text-slate-400 block mb-1.5 uppercase tracking-wider"><i class="fa-solid fa-money-bill-transfer mr-1"></i>即時匯率</label>
-              <input type="number" id="fx_rate" value="31.4" step="0.1" class="input-modern text-indigo-400" oninput="safeCalculate()">
-            </div>
-          </div>
-          
-          <div class="bg-slate-900/50 p-4 rounded-2xl border border-indigo-500/20 mb-6">
-            <label class="text-[10px] font-black text-indigo-400 block mb-2 text-center uppercase tracking-widest"><i class="fa-brands fa-usps mr-1"></i>QQQ 美金庫存</label>
-            <input type="number" id="qqq_now" value="25660" class="w-full bg-transparent border-none text-white text-3xl font-black text-center outline-none p-0" oninput="safeCalculate()">
-          </div>
+<!-- 壓力雷達 -->
+<div class="glass">
+<canvas id="stressRadar"></canvas>
+</div>
 
-          <div class="space-y-4">
-            <div>
-              <div class="flex justify-between text-xs font-black text-slate-300 mb-1 uppercase">
-                <span>導流火力</span><span class="text-emerald-400"><span id="ratio_val">25</span>%</span>
-              </div>
-              <input type="range" id="transfer_ratio" min="0" max="100" value="25" oninput="safeCalculate()">
-            </div>
-            <div class="grid grid-cols-2 gap-5">
-              <div>
-                <label class="text-[10px] font-black text-slate-500 block mb-1">年化期望 (<span id="ret_val">11</span>%)</label>
-                <input type="range" id="expected_return" min="1" max="25" value="11" oninput="safeCalculate()">
-              </div>
-              <div>
-                <label class="text-[10px] font-black text-slate-500 block mb-1">作戰年限 (<span id="yrs_val">5</span>年)</label>
-                <input type="range" id="years" min="1" max="30" value="5" oninput="safeCalculate()">
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
+<!-- 成長曲線 -->
+<div class="glass">
+<canvas id="growthChart"></canvas>
+</div>
 
-      <div class="lg:w-1/2 space-y-5">
-        <div class="glass-card p-6 h-full flex flex-col">
-          <div class="flex justify-between items-end mb-3">
-            <div>
-              <span class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Price Margin 價格護城河</span>
-              <div id="out_margin_text" class="text-4xl font-black text-white mt-1">--</div>
-            </div>
-            <div id="alert_box" class="text-[10px] font-bold px-3 py-1.5 rounded-lg bg-slate-800 text-slate-400">運算中...</div>
-          </div>
-          
-          <div class="w-full bg-slate-900 h-2 rounded-full overflow-hidden mb-5">
-            <div id="margin_bar" class="h-full transition-all duration-500 bg-emerald-500" style="width: 0%"></div>
-          </div>
-          
-          <div class="grid grid-cols-2 gap-3 mb-4">
-            <div class="bg-emerald-500/10 p-4 rounded-2xl border border-emerald-500/20 text-center">
-              <span class="text-[9px] font-bold text-emerald-500 block mb-1 uppercase tracking-widest">本季淨導流</span>
-              <span id="out_transfer" class="text-xl font-black text-emerald-400">--</span>
-            </div>
-            <div class="bg-indigo-500/10 p-4 rounded-2xl border border-indigo-500/20 text-center">
-              <span class="text-[9px] font-bold text-indigo-400 block mb-1 uppercase tracking-widest">未來預估資產</span>
-              <span id="out_future" class="text-xl font-black text-indigo-300">--</span>
-            </div>
-          </div>
-
-          <div class="grid grid-cols-3 gap-2 mb-4">
-            <div class="bg-slate-800/50 p-3 rounded-xl border border-white/5 text-center">
-              <div class="text-[9px] font-bold text-slate-400 mb-1">0050總市值</div>
-              <div id="out_total_twd" class="text-xs font-black text-white">--</div>
-            </div>
-            <div class="bg-slate-800/50 p-3 rounded-xl border border-white/5 text-center">
-              <div class="text-[9px] font-bold text-slate-400 mb-1">帳面獲利</div>
-              <div id="out_profit" class="text-xs font-black text-white">--</div>
-            </div>
-            <div class="bg-slate-800/50 p-3 rounded-xl border border-white/5 text-center">
-              <div class="text-[9px] font-bold text-slate-400 mb-1">QQQ換算台幣</div>
-              <div id="out_qqq_twd" class="text-xs font-black text-white">--</div>
-            </div>
-          </div>
-          
-          <div class="flex-grow min-h-[160px] relative"><canvas id="growthChart"></canvas></div>
-        </div>
-      </div>
-
-    </div>
-  </div>
-
-  <div id="tab-dca" class="tab-content">
-    <div class="glass-card p-6 space-y-5">
-      <h2 class="text-lg font-black text-white flex items-center gap-2"><i class="fa-solid fa-calendar-days text-emerald-400"></i> 定期定額試算</h2>
-      <div class="grid grid-cols-2 md:grid-cols-3 gap-4">
-        <div><label class="text-[10px] font-black text-slate-400 block mb-1.5 uppercase">每月投入(TWD)</label><input id="dca-monthly" type="number" value="10000" class="input-modern" oninput="calcDCA()"></div>
-        <div><label class="text-[10px] font-black text-slate-400 block mb-1.5 uppercase">預期年化(%)</label><input id="dca-return" type="number" value="8" class="input-modern" oninput="calcDCA()"></div>
-        <div><label class="text-[10px] font-black text-slate-400 block mb-1.5 uppercase">投資年限</label><input id="dca-years" type="number" value="20" class="input-modern" oninput="calcDCA()"></div>
-        <div><label class="text-[10px] font-black text-slate-400 block mb-1.5 uppercase">初始本金</label><input id="dca-init" type="number" value="0" class="input-modern" oninput="calcDCA()"></div>
-        <div><label class="text-[10px] font-black text-slate-400 block mb-1.5 uppercase">通膨率(%)</label><input id="dca-inflation" type="number" value="2" class="input-modern" oninput="calcDCA()"></div>
-      </div>
-      <div class="grid grid-cols-2 gap-3 mt-4">
-        <div class="bg-emerald-500/10 p-4 rounded-xl border border-emerald-500/20 text-center"><div class="text-[10px] font-bold text-emerald-400 mb-1">最終資產(名目)</div><div id="dca-final" class="text-xl font-black text-white">--</div></div>
-        <div class="bg-indigo-500/10 p-4 rounded-xl border border-indigo-500/20 text-center"><div class="text-[10px] font-bold text-indigo-400 mb-1">扣除通膨(實質)</div><div id="dca-real" class="text-xl font-black text-white">--</div></div>
-      </div>
-      <div class="min-h-[200px] relative mt-4"><canvas id="dcaChart"></canvas></div>
-    </div>
-  </div>
-
-  <div id="tab-tax" class="tab-content">
-    <div class="grid md:grid-cols-2 gap-5">
-      <div class="glass-card p-6 space-y-5">
-        <h2 class="text-lg font-black text-white flex items-center gap-2"><i class="fa-solid fa-sack-dollar text-amber-400"></i> 股息估算</h2>
-        <div class="grid grid-cols-2 gap-4">
-          <div><label class="text-[10px] font-black text-slate-400 block mb-1.5 uppercase">持有股數</label><input id="div-shares" type="number" value="1602" class="input-modern" oninput="calcDividend()"></div>
-          <div><label class="text-[10px] font-black text-slate-400 block mb-1.5 uppercase">每股配息(元)</label><input id="div-per" type="number" value="3.5" step="0.1" class="input-modern" oninput="calcDividend()"></div>
-          <div class="col-span-2">
-            <label class="text-[10px] font-black text-slate-400 block mb-1.5 uppercase">配息頻率</label>
-            <select id="div-freq" onchange="calcDividend()" class="input-modern bg-slate-800">
-              <option value="1">年配 (1次/年)</option><option value="2" selected>半年配 (2次/年)</option><option value="4">季配 (4次/年)</option><option value="12">月配 (12次/年)</option>
-            </select>
-          </div>
-        </div>
-        <div class="bg-amber-500/10 p-4 rounded-xl border border-amber-500/20 text-center">
-          <div class="text-[10px] font-bold text-amber-400 mb-1">預估年領股息</div>
-          <div id="div-annual" class="text-2xl font-black text-white">--</div>
-        </div>
-      </div>
-      <div class="glass-card p-6 space-y-5">
-        <h2 class="text-lg font-black text-white flex items-center gap-2"><i class="fa-solid fa-calculator text-rose-400"></i> 交易稅費</h2>
-        <div class="grid grid-cols-2 gap-4">
-          <div><label class="text-[10px] font-black text-slate-400 block mb-1.5 uppercase">賣出總金額</label><input id="tax-sell" type="number" value="100000" class="input-modern" oninput="calcTax()"></div>
-          <div><label class="text-[10px] font-black text-slate-400 block mb-1.5 uppercase">券商折扣(%)</label><input id="fee-disc" type="number" value="60" class="input-modern" oninput="calcTax()"></div>
-          <div class="col-span-2">
-            <label class="text-[10px] font-black text-slate-400 block mb-1.5 uppercase">股票類型</label>
-            <select id="tax-type" onchange="calcTax()" class="input-modern bg-slate-800">
-              <option value="0.003">一般股票 (證交稅 0.3%)</option>
-              <option value="0.001" selected>ETF / 興櫃 (證交稅 0.1%)</option>
-            </select>
-          </div>
-        </div>
-        <div class="bg-rose-500/10 p-4 rounded-xl border border-rose-500/20 text-center">
-          <div class="text-[10px] font-bold text-rose-400 mb-1">賣出總成本 (手續費+交易稅)</div>
-          <div id="fee-sell-total" class="text-2xl font-black text-white">--</div>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <div id="tab-watchlist" class="tab-content">
-    <div class="glass-card p-6 space-y-5">
-      <h2 class="text-lg font-black text-white flex items-center gap-2"><i class="fa-solid fa-bell text-blue-400"></i> 股票追蹤與警報</h2>
-      <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <div class="col-span-2 relative">
-          <label class="text-[10px] font-black text-slate-400 block mb-1.5 uppercase">搜尋股票</label>
-          <input id="w-search" class="input-modern" placeholder="輸入代號/名稱" onfocus="openDrop('w-drop')" oninput="searchStock('w-drop','w-search','w-code','w-name')" autocomplete="off">
-          <input type="hidden" id="w-code"><input type="hidden" id="w-name">
-          <div id="w-drop" class="stock-drop"></div>
-        </div>
-        <div><label class="text-[10px] font-black text-slate-400 block mb-1.5 uppercase text-emerald-400">停利價</label><input id="w-tp" type="number" class="input-modern" placeholder="選填"></div>
-        <div><label class="text-[10px] font-black text-slate-400 block mb-1.5 uppercase text-rose-400">停損價</label><input id="w-sl" type="number" class="input-modern" placeholder="選填"></div>
-      </div>
-      <button onclick="addWatchStock()" class="w-full py-3 bg-blue-600 hover:bg-blue-500 text-white font-black rounded-xl transition-all active:scale-95">＋ 加入追蹤名單</button>
-      <div id="watchlist-rows" class="space-y-3 mt-4">
-        <div class="text-center text-slate-500 text-sm py-8">尚無追蹤股票</div>
-      </div>
-    </div>
-  </div>
+<!-- AI 建議 -->
+<div class="glass">
+<div class="text-sm text-slate-400">AI 戰略建議</div>
+<div id="aiAdvice" class="text-xl font-black mt-2 text-emerald-400"></div>
+<div class="mt-2 text-sm">風險等級：<span id="riskLevel"></span></div>
+</div>
 
 </div>
 
-<nav class="tab-nav justify-around md:justify-center">
-  <button class="tab-btn active flex-col md:flex-row gap-1" onclick="switchTab('main',this)"><i class="fa-solid fa-bolt text-lg"></i><span>主控台</span></button>
-  <button class="tab-btn flex-col md:flex-row gap-1" onclick="switchTab('dca',this)"><i class="fa-solid fa-calendar-days text-lg"></i><span>定期定額</span></button>
-  <button class="tab-btn flex-col md:flex-row gap-1" onclick="switchTab('tax',this)"><i class="fa-solid fa-calculator text-lg"></i><span>股息稅務</span></button>
-  <button class="tab-btn flex-col md:flex-row gap-1" onclick="switchTab('watchlist',this)"><i class="fa-solid fa-bell text-lg"></i><span>追蹤警報</span></button>
-</nav>
+<!-- CONTROL -->
+<div id="tab-control" class="hidden space-y-6">
+
+<div class="glass space-y-4">
+<div class="grid grid-cols-2 gap-4">
+<input id="assetInput" type="number" placeholder="目前資產" class="p-2 bg-slate-800 rounded">
+<input id="goalInput" type="number" placeholder="目標資產" class="p-2 bg-slate-800 rounded">
+<input id="returnInput" type="number" placeholder="年化報酬 %" class="p-2 bg-slate-800 rounded">
+<input id="yearInput" type="number" placeholder="投資年限" class="p-2 bg-slate-800 rounded">
+</div>
+<button onclick="calculate()" class="w-full bg-emerald-500 text-black py-2 rounded-xl font-bold">更新系統</button>
+</div>
+
+</div>
+
+<!-- RECORD -->
+<div id="tab-record" class="hidden">
+<div class="glass">
+<div class="text-lg font-bold mb-3">等級系統</div>
+<div id="levelDisplay"></div>
+<ul id="achievements" class="mt-4 space-y-2 text-sm"></ul>
+</div>
+</div>
 
 <script>
-// 全域變
+let goalChart, stressRadar, growthChart;
+
+function switchTab(tab){
+document.querySelectorAll("[id^='tab-']").forEach(t=>t.classList.add("hidden"));
+document.getElementById("tab-"+tab).classList.remove("hidden");
+document.querySelectorAll(".nav-btn").forEach(b=>b.classList.remove("active"));
+event.target.classList.add("active");
+}
+
+function animateNumber(id,value){
+let el=document.getElementById(id);
+let start=0;
+let duration=1000;
+let startTime=null;
+function step(timestamp){
+if(!startTime) startTime=timestamp;
+let progress=Math.min((timestamp-startTime)/duration,1);
+el.textContent=Math.floor(progress*(value-start)+start).toLocaleString();
+if(progress<1) requestAnimationFrame(step);
+}
+requestAnimationFrame(step);
+}
+
+function calculate(){
+let asset=parseFloat(assetInput.value)||0;
+let goal=parseFloat(goalInput.value)||1;
+let rate=(parseFloat(returnInput.value)||5)/100;
+let years=parseInt(yearInput.value)||5;
+
+localStorage.setItem("wf3",JSON.stringify({asset,goal,rate,years}));
+
+let percent=Math.min(100,(asset/goal)*100);
+
+animateNumber("assetDisplay",asset);
+todayDisplay.textContent="目標達成 "+percent.toFixed(1)+"%";
+
+renderGoal(percent);
+renderRadar(asset,goal,years);
+renderGrowth(asset,rate,years);
+generateAI(asset,goal,years);
+updateLevel(asset);
+}
+
+function renderGoal(percent){
+if(goalChart) goalChart.destroy();
+goalChart=new Chart(goalChartCanvas,{
+type:"doughnut",
+data:{datasets:[{data:[percent,100-percent],backgroundColor:["#10b981","#1e293b"],borderWidth:0}]},
+options:{cutout:"75%",plugins:{legend:{display:false}}}
+});
+}
+
+function renderRadar(asset,goal,years){
+if(stressRadar) stressRadar.destroy();
+let concentration=Math.min(100,(asset/goal)*80);
+let timePressure=years*10;
+stressRadar=new Chart(stressRadarCanvas,{
+type:"radar",
+data:{
+labels:["集中度","時間壓力","波動風險","現金比例","心理壓力"],
+datasets:[{
+data:[concentration,timePressure,60,40,50],
+borderColor:"#10b981",
+backgroundColor:"rgba(16,185,129,0.2)"
+}]
+},
+options:{plugins:{legend:{display:false}},scales:{r:{grid:{color:"#334155"}}}}
+});
+}
+
+function renderGrowth(asset,rate,years){
+if(growthChart) growthChart.destroy();
+let labels=[],data=[];
+for(let i=0;i<=years;i++){
+labels.push("Y"+i);
+data.push(asset*Math.pow(1+rate,i));
+}
+growthChart=new Chart(growthChartCanvas,{
+type:"line",
+data:{labels:labels,datasets:[{data:data,borderColor:"#10b981",tension:0.3}]},
+options:{plugins:{legend:{display:false}},scales:{y:{display:false}}}
+});
+}
+
+function generateAI(asset,goal,years){
+let ratio=asset/goal;
+let advice="";
+let risk="";
+if(ratio<0.3){ advice="積極成長期，增加導流"; risk="低"; }
+else if(ratio<0.7){ advice="穩定推進，控制風險"; risk="中"; }
+else{ advice="接近目標，降低波動"; risk="高"; }
+aiAdvice.textContent=advice;
+riskLevel.textContent=risk;
+}
+
+function updateLevel(asset){
+let level=Math.floor(asset/1000000)+1;
+levelDisplay.textContent="Lv."+level;
+let list=[];
+if(asset>1000000) list.push("🥇 百萬達成");
+if(asset>5000000) list.push("🏆 五百萬達成");
+if(asset>10000000) list.push("👑 千萬自由");
+achievements.innerHTML=list.map(i=>"<li>"+i+"</li>").join("");
+}
+
+window.onload=()=>{
+let saved=JSON.parse(localStorage.getItem("wf3"));
+if(saved){
+assetInput.value=saved.asset;
+goalInput.value=saved.goal;
+returnInput.value=saved.rate*100;
+yearInput.value=saved.years;
+calculate();
+}
+};
+</script>
+
+</body>
+</html>
